@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2010, 2012 Ericsson
- *  
+ * 
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -15,6 +15,9 @@
 package org.eclipse.mylyn.reviews.r4e.core.model;
 
 import java.util.Date;
+
+import java.util.List;
+import java.util.Map;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
 
@@ -53,7 +56,7 @@ public interface R4EParticipant extends R4EUser {
 	 * @model
 	 * @generated
 	 */
-	EList<R4EUserRole> getRoles();
+	List<R4EUserRole> getRoles();
 
 	/**
 	 * Returns the value of the '<em><b>Focus Area</b></em>' attribute.
@@ -110,8 +113,8 @@ public interface R4EParticipant extends R4EUser {
 	 * The list contents are of type {@link org.eclipse.mylyn.reviews.r4e.core.model.R4EID}.
 	 * <!-- begin-user-doc -->
 	 * <p>
-	 * If the meaning of the '<em>Reviewed Content</em>' containment reference list isn't clear, there really should be
-	 * more of a description here...
+	 * If the meaning of the '<em>Reviewed Content</em>' reference list isn't clear, there really should be more of a
+	 * description here...
 	 * </p>
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Reviewed Content</em>' reference list.
@@ -119,7 +122,7 @@ public interface R4EParticipant extends R4EUser {
 	 * @model
 	 * @generated
 	 */
-	EList<R4EID> getReviewedContent();
+	List<R4EID> getReviewedContent();
 
 	/**
 	 * Returns the value of the '<em><b>Time Log</b></em>' map.
@@ -135,6 +138,6 @@ public interface R4EParticipant extends R4EUser {
 	 * @model mapType="org.eclipse.mylyn.reviews.r4e.core.model.MapDateToDuration<org.eclipse.emf.ecore.EDate, org.eclipse.emf.ecore.EIntegerObject>"
 	 * @generated
 	 */
-	EMap<Date, Integer> getTimeLog();
+	Map<Date, Integer> getTimeLog();
 
 } // R4EParticipant

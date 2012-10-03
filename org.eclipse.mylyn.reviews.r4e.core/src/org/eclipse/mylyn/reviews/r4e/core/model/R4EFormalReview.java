@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2010, 2012 Ericsson
- *  
+ * 
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -14,6 +14,7 @@
  */
 package org.eclipse.mylyn.reviews.r4e.core.model;
 
+import java.util.List;
 import org.eclipse.emf.common.util.EList;
 
 /**
@@ -72,7 +73,7 @@ public interface R4EFormalReview extends R4EReview {
 	 * @model containment="true" resolveProxies="true"
 	 * @generated
 	 */
-	EList<R4EReviewPhaseInfo> getPhases();
+	List<R4EReviewPhaseInfo> getPhases();
 
 	/**
 	 * Returns the value of the '<em><b>Current</b></em>' reference.

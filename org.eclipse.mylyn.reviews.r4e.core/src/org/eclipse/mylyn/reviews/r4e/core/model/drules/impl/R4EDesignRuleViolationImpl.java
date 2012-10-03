@@ -9,22 +9,29 @@
  * Description:
  * 
  * Contributors:
- *    Alvaro Sanchez-Leon - Initial API and implementation
+ * Alvaro Sanchez-Leon  - Initial API and implementation
  * 
  */
 package org.eclipse.mylyn.reviews.r4e.core.model.drules.impl;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.NotificationChain;
+
 import org.eclipse.emf.common.util.EList;
+
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.InternalEObject;
+
 import org.eclipse.emf.ecore.impl.ENotificationImpl;
+
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
 import org.eclipse.emf.ecore.util.InternalEList;
-import org.eclipse.mylyn.reviews.frame.core.model.impl.ReviewComponentImpl;
+
+import org.eclipse.mylyn.reviews.internal.core.model.ReviewComponent;
+
 import org.eclipse.mylyn.reviews.r4e.core.model.drules.DRModelPackage;
 import org.eclipse.mylyn.reviews.r4e.core.model.drules.R4EDesignRule;
 import org.eclipse.mylyn.reviews.r4e.core.model.drules.R4EDesignRuleViolation;
@@ -42,7 +49,7 @@ import org.eclipse.mylyn.reviews.r4e.core.model.drules.R4EDesignRuleViolation;
  *
  * @generated
  */
-public class R4EDesignRuleViolationImpl extends ReviewComponentImpl implements R4EDesignRuleViolation {
+public class R4EDesignRuleViolationImpl extends ReviewComponent implements R4EDesignRuleViolation {
 	/**
 	 * The cached value of the '{@link #getRules() <em>Rules</em>}' containment reference list.
 	 * <!-- begin-user-doc -->
@@ -94,7 +101,7 @@ public class R4EDesignRuleViolationImpl extends ReviewComponentImpl implements R
 	 * <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<R4EDesignRule> getRules() {
+	public List<R4EDesignRule> getRules() {
 		if (rules == null) {
 			rules = new EObjectContainmentEList.Resolving<R4EDesignRule>(R4EDesignRule.class, this, DRModelPackage.R4E_DESIGN_RULE_VIOLATION__RULES);
 		}

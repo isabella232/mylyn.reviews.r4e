@@ -65,18 +65,28 @@
           <layout>p2</layout>
           <url>${mylyn-versions-repository-url}</url>
         </repository>
-<!--  Orbit is taken from parent pom
+		<repository>
+		  <id>eclipse-mylyn-tasks</id>
+		  <layout>p2</layout>
+		  <url>${mylyn-tasks-repository-url}</url>
+		</repository>
+		<repository>
+		  <id>eclipse-mylyn-context</id>
+		  <layout>p2</layout>
+		  <url>${mylyn-context-repository-url}</url>
+		</repository>
+		<!--  Orbit is taken from parent pom
         <repository>
            <id>eclipse-mylyn-orbit-committers</id>
            <layout>p2</layout>
            <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120119162704/repository/</url>
          </repository>
 -->
-         <repository>
-            <id>eclipse-mylyn-reviews-r4e</id>
-            <layout>p2</layout>
-            <url>http://download.eclipse.org/r4e/updates/</url>
-          </repository>
+        <repository>
+			<id>github-mylyn-reviews</id>
+			<layout>p2</layout>
+			<url>http://mylyn.org/mylyn-reviews-github/org.eclipse.mylyn.reviews.site/target/site/</url>
+		</repository>
       </repositories>
       <modules>
          <module>org.eclipse.mylyn.reviews.r4e-site</module>
@@ -157,7 +167,6 @@
   </dependencyManagement>
 
   <modules>
-     <module>org.eclipse.mylyn.reviews.frame.core</module>
      <module>org.eclipse.mylyn.reviews.frame.ui</module>
      <module>org.eclipse.mylyn.reviews.r4e.ldap</module>
      <module>org.eclipse.mylyn.reviews.notifications</module>
