@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="r4e-dev-myly3.8" sequenceNumber="10">
+<?pde version="3.8"?><target name="r4e-dev-myly3.8" sequenceNumber="11">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.sdk.ide" version="0.0.0"/>
@@ -33,13 +33,6 @@
 <repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.mylyn.commons.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.versions.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.git.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.subclipse.feature.group" version="0.0.0"/>
-<repository location="http://archive.eclipse.org/mylyn/drops/3.8.2/v20120916-1200"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.tigris.subversion.subclipse.feature.group" version="0.0.0"/>
 <unit id="org.tigris.subversion.subclipse.mylyn.feature.group" version="0.0.0"/>
 <unit id="org.tigris.subversion.clientadapter.feature.feature.group" version="0.0.0"/>
@@ -56,6 +49,46 @@
 <unit id="org.eclipse.jetty.servlet" version="7.6.0.v20120127"/>
 <unit id="org.eclipse.jetty.util" version="7.6.0.v20120127"/>
 <repository location="http://archive.eclipse.org/jetty/updates/jetty-bundles-7.x/7.6.0.v20120127/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.mylyn.docs.epub.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.wikitext_feature.feature.group" version="1.7.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.context_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.java_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.team_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.git.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.trac_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.gerrit.feature.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.ide_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.cvs.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.bugzilla_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.subclipse.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.hudson.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.cdt.mylyn.feature.group" version="5.4.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.pde_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.wikitext.sdk.feature.group" version="1.7.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.docs.sdk.feature.group" version="1.7.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.test_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.identity.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.reviews.feature.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.builds.sdk.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.sdk.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.repositories.http.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.notifications.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.htmltext.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.tasks.ide.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.versions.sdk.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.versions.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.context.sdk.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.docs.epub.sdk.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.builds.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.repositories.feature.group" version="1.0.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.commons.compatibility.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.sdk_feature.feature.group" version="3.8.3.v20130107-0100"/>
+<unit id="org.eclipse.mylyn.reviews.sdk.feature.feature.group" version="1.0.3.v20130107-0100"/>
+<repository location="http://archive.eclipse.org/mylyn/drops/3.8.3/v20130107-0100"/>
 </location>
 </locations>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
