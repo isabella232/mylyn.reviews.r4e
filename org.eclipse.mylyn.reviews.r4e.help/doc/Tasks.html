@@ -456,6 +456,23 @@
 		<p>
 			<br/>
 		</p>
+		<pre>When two Review Items have the same first line description, their displayed name in the Review Navigator will include a version number just after the Review Item type (e.g. Commit 1:... and Commit 2:..., where ... are two identical strings).  This will show the users that the two Review Items are two different versions of the same code change.  Of course, the first line of the Review Item description must not be changed for this function to work.
+</pre>
+		<h3 id="Comparing_Review_Items">Comparing Review Items</h3>
+		<p>Is is possible to compare two arbitrary Review Items that are included in the same Review.  Typically this will be used to see the differences between two versions of a given code change.</p>
+		<p>In order to do this, select two Review Items in the Review Navigator (using Ctrl-Left click or Shift-Left click) and then right click on one of the items and select the "Compare Review Items" command from the context menu</p>
+		<p>
+			<img border="0" src="CompareReviewItems.png"/>
+		</p>
+		<p>This will open a Structural Compare Editor that will show the files versions that are different.  The file that belong to the most recently committed Review Item will always be the target files (on the left side) and the files belonging to the oldest Review Item will be the base files (on the right side).</p>
+		<p>Little + decorators show the files that were added in the newest Review Item, whereas - decorators show removed files.</p>
+		<p>To see the differences within a specific file, just double click on it and the lower side of the compare editor will be populated with the content differences between the files.  From the Compare Editor, it is also possible to modify the R4E annotation markers (see 
+			<a href="Tasks.html#Using_Review_Annotations_and_Inline_Comments">R4E Annotations</a>), on either side.
+		</p>
+		<p>For instance, one could verify that anomalies that were written on a previous version of the code change are indeed corrected and change the state of the anomalies on the base version (right side) accordingly, as shown below.</p>
+		<p>
+			<img border="0" src="CompareReviewItemsEditor.png"/>
+		</p>
 		<h3 id="Assigning_Review_Elements">Assigning Review Elements</h3>
 		<p>It is possible to assign specific review  elements (i.e. Review Items, File Contexts, Selections and Deltas) to specific participants.  To do so, use the context command 
 			<i>Assign to Participant</i> for the desired elements.  

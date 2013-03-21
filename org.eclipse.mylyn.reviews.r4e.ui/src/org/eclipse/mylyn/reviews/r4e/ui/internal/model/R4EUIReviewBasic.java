@@ -485,7 +485,9 @@ public class R4EUIReviewBasic extends R4EUIModelElement {
 
 	/**
 	 * Method getParticipants.
-	 * @param aIncludeDisabled - boolean
+	 * 
+	 * @param aIncludeDisabled
+	 *            - boolean
 	 * @return List<R4EParticipant>
 	 */
 	public List<R4EParticipant> getParticipants(boolean aIncludeDisabled) {
@@ -738,7 +740,7 @@ public class R4EUIReviewBasic extends R4EUIModelElement {
 							int endIndex = (description.length() > R4EUIConstants.END_STRING_NAME_INDEX)
 									? R4EUIConstants.END_STRING_NAME_INDEX
 									: description.length();
-							String name = "Commit: "
+							String name = CommandUtils.getCommitPrefix(items, item)
 									+ description.substring(R4EUIConstants.START_STRING_INDEX, endIndex) + "...";
 							uiItem = new R4EUIReviewItem(this, item, name, R4EUIConstants.REVIEW_ITEM_TYPE_COMMIT);
 						}
@@ -1118,7 +1120,8 @@ public class R4EUIReviewBasic extends R4EUIModelElement {
 				? R4EUIConstants.END_STRING_NAME_INDEX
 				: message.length();
 
-		final String name = "Commit: " + message.substring(R4EUIConstants.START_STRING_INDEX, endIndex) + "...";
+		final String name = CommandUtils.getCommitPrefix(getReview().getReviewItems(), reviewItem)
+				+ message.substring(R4EUIConstants.START_STRING_INDEX, endIndex) + "...";
 
 		//Create and set UI model element
 		final R4EUIReviewItem uiReviewItem = new R4EUIReviewItem(this, reviewItem, name,
