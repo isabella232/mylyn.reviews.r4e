@@ -318,9 +318,9 @@ public class CompareReviewItemsTests extends TestCase {
 						.get(2)
 						.getTarget()
 						.getLocation()).getLength());
-				r4eAssert.assertTrue(fProxy.getCommandProxy().verifyAnnotations(
-						((R4EUIFileContext) fItem.getChildren()[i]).getContentsContainerElement().getChildren(), true,
-						R4EUIConstants.DELTA_ANNOTATION_ID));
+				//r4eAssert.assertTrue(fProxy.getCommandProxy().verifyAnnotations(
+				//	((R4EUIFileContext) fItem.getChildren()[i]).getContentsContainerElement().getChildren(), true,
+				//	R4EUIConstants.DELTA_ANNOTATION_ID));
 			} else if (((R4EUIFileContext) fItem.getChildren()[i]).getName().equals(TestUtils.JAVA_FILE4_PROJ_NAME)) {
 				r4eAssert.assertNull(fItem.getItem().getFileContextList().get(i).getBase());
 				r4eAssert.assertEquals(TestUtils.JAVA_FILE4_PROJ_NAME, fItem.getItem()
@@ -400,8 +400,8 @@ public class CompareReviewItemsTests extends TestCase {
 		r4eAssert.assertEquals(50, ((R4ETextPosition) ((R4ETextContent) fCompareEditorAnomaly.getAnomaly()
 				.getLocation()
 				.get(0)).getLocation()).getLength());
-		r4eAssert.assertTrue(fProxy.getCommandProxy().verifyAnnotation(fCompareEditorAnomaly, true,
-				R4EUIConstants.ANOMALY_OPEN_ANNOTATION_ID));
+		//r4eAssert.assertTrue(fProxy.getCommandProxy().verifyAnnotation(fCompareEditorAnomaly, true,
+		//		R4EUIConstants.ANOMALY_OPEN_ANNOTATION_ID));
 	}
 
 	/**
