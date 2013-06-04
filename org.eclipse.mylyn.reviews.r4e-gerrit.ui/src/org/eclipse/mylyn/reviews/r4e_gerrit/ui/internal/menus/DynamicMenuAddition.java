@@ -55,7 +55,7 @@ public class DynamicMenuAddition extends CompoundContributionItem implements IWo
 	 */
 //	private String SELECT_PICTURE_FILE = "icons/select.png";
 	private static String SELECT_PICTURE_FILE = "icons/select.gif";
-    private static String IMAGE_ID = "imageId";
+//    private static String IMAGE_ID = "imageId";
 	
     /**
      * Note: An image registry owns all of the image objects registered with it,
@@ -70,12 +70,12 @@ public class DynamicMenuAddition extends CompoundContributionItem implements IWo
               R4EGerritUi.getImageDescriptor(SELECT_PICTURE_FILE));
 
       /////////////////////
-        Bundle bundle = Platform.getBundle(R4EGerritUi.PLUGIN_ID);
-        IPath path = new Path("icons/favicon.ico");
-        URL url = FileLocator.find(bundle, path, null);
-        ImageDescriptor desc = ImageDescriptor.createFromURL(url);
-        desc.createImage();
-        fImageRegistry.put(IMAGE_ID, desc);
+//        Bundle bundle = Platform.getBundle(R4EGerritUi.PLUGIN_ID);
+//        IPath path = new Path("icons/favicon.ico");
+//        URL url = FileLocator.find(bundle, path, null);
+//        ImageDescriptor desc = ImageDescriptor.createFromURL(url);
+//        desc.createImage();
+//        fImageRegistry.put(IMAGE_ID, desc);
 
     }
 
@@ -124,8 +124,8 @@ public class DynamicMenuAddition extends CompoundContributionItem implements IWo
 				contributionParameter.visibleEnabled = true;
 				if (lastSelected != null
 						&& lastSelected.equals(fMapServer.get(key))) {
-//					fSelectPicture = fImageRegistry.getDescriptor(SELECT_PICTURE_FILE);
-                    fSelectPicture = fImageRegistry.getDescriptor(IMAGE_ID);
+					fSelectPicture = fImageRegistry.getDescriptor(SELECT_PICTURE_FILE);
+//                    fSelectPicture = fImageRegistry.getDescriptor(IMAGE_ID);
 
 					contributionParameter.icon = fSelectPicture;
 

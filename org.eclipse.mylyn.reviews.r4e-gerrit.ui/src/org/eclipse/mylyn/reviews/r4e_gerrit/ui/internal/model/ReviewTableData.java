@@ -48,15 +48,15 @@ public class ReviewTableData {
 	public void createReviewItem(List<R4EGerritReviewSummary> aList, String aQuery, TaskRepository aTaskRepo) {
 
 		// Create the new object
-		if (fQuery != aQuery) {
+//		if (fQuery != aQuery) {
 			fReviewList = aList;
 			fTaskRepo = aTaskRepo;
 			fQuery = aQuery;
 			
-		} else {
-			//Need to reset the list, we just created a null entry
-			reset();
-		}
+//		} else {
+//			//Need to reset the list, we just created a null entry
+//			reset();
+//		}
 	}	
 	
 	/**

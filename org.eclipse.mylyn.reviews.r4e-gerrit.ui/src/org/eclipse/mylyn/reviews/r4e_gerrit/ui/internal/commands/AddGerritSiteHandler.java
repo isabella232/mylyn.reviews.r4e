@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
+import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.internal.tasks.ui.wizards.EditRepositoryWizard;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
@@ -114,16 +115,17 @@ public class AddGerritSiteHandler extends AbstractHandler {
 					    R4EGerritPlugin.Ftracer.traceInfo("LAST SAVED server is the SAME ");
 						fServerUtil.getReviewListFromServer ();
 						
-						//Get the last saved repo
-						reviewTableView.setviewRepository(fServerUtil.getTaskRepo(stURL));
+						//Initiate the request for the list of reviews with a default query
+						reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
 
 						return Status.OK_STATUS; //For now , do not process the dialogue
 					} else {
 						//Store the new Gerrit server into a file
 						fServerUtil.saveLastGerritServer(stURL);
 						fServerUtil.getReviewListFromServer ();
-						//Get the last saved repo
-						reviewTableView.setviewRepository(fServerUtil.getTaskRepo(stURL));
+						
+						//Initiate the request for the list of reviews with a default query
+						reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
 
 						return Status.OK_STATUS; //For now , do not process the dialogue
 					}
@@ -133,8 +135,8 @@ public class AddGerritSiteHandler extends AbstractHandler {
 
 		//Open the Dialogue to enter a new Gerrit URL
 		Object dialogObj = openDialogue ();
-		//Set the table view with the last TaskRepo 
-		reviewTableView.setviewRepository(fServerUtil.getTaskRepo(fServerUtil.getLastSavedGerritServer()));
+		//Set the table view with the last TaskRepo and the default query
+		reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
 		
 		return dialogObj;
 	}

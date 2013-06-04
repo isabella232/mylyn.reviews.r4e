@@ -1,6 +1,15 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2013 Ericsson
  * 
- */
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *   Jacques Bouthillier - Initial implementation
+ ******************************************************************************/
+
 package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils;
 
 import java.util.ArrayList;
@@ -13,8 +22,9 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 
 /**
- * @author lmcbout
- *
+ * @author Jacques Bouthillier
+ * @version $Revision: 1.0 $
+ * 
  */
 public class R4EQueryUtil {
 
@@ -34,6 +44,10 @@ public class R4EQueryUtil {
                     results.add(summary);
                 }
             }
+        } else {
+        	R4EGerritUi.Ftracer.traceWarning(status.toString());
+        	String msg = "Unable to read the Gerrit server.";
+        	UIUtils.showErrorDialog(msg, status.toString());
         }
         return results;
     }

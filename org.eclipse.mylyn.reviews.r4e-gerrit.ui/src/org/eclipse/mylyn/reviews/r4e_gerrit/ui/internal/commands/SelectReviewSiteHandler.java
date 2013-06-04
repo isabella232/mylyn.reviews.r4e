@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
@@ -58,7 +59,6 @@ public class SelectReviewSiteHandler extends AbstractHandler {
 
 	private R4EGerritServerUtility fServerUtil = null;
 	
-//	private Map<Repository, String> fMapRepoServer = null;
 	private Map<TaskRepository, String> fMapRepoServer = null;
 
 
@@ -117,9 +117,8 @@ public class SelectReviewSiteHandler extends AbstractHandler {
 				
 				String serverToUsed = fServerUtil.getLastSavedGerritServer();
 				if (serverToUsed!= null) {
-					//Initiate the request for the list of reviews
-					fServerUtil.getReviewListFromServer();
-					reviewTableView.setviewRepository(fServerUtil.getTaskRepo(serverToUsed));
+					//Initiate the request for the list of reviews with a default query
+					reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
 
 				} else {
 					//Need to open the Dialogue to fill a Gerrit server

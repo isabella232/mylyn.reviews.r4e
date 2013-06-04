@@ -32,10 +32,10 @@ import org.eclipse.swt.widgets.Display;
 public class UIUtils {
 
 	/**
-	 * Method displaySyncErrorDialog.
+	 * Method notInplementedDialog.
 	 * 
-	 * @param e
-	 *            OutOfSyncException
+	 * @param String
+	 *            
 	 */
 	public static void notInplementedDialog(String aSt) {
 		String msg = "Not Implemented yet !";
@@ -52,6 +52,27 @@ public class UIUtils {
 		});
 		// TODO later we will want to do this automatically
 	}
+
+	/**
+	 * Method showErrorDialog.
+	 * 
+	 * @param String message
+	 * @param String reason
+	 */
+	public static void showErrorDialog(String aMsg, String aReason) {
+		R4EGerritUi.Ftracer.traceWarning(aMsg + "\t reason: " + aReason);
+		final ErrorDialog dialog = new ErrorDialog(
+				null,
+				"R4E-Info",
+				aMsg   ,
+				new Status(IStatus.INFO, R4EGerritUi.PLUGIN_ID, 0, aReason, null), IStatus.INFO);
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				dialog.open();
+			}
+		});
+	}
+
 
 	/**
 	 * Creates view preference frame and return the child composite.
