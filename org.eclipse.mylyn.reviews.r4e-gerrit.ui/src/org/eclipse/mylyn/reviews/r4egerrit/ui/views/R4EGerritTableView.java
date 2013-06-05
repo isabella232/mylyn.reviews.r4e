@@ -15,7 +15,6 @@
 
 package org.eclipse.mylyn.reviews.r4egerrit.ui.views;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,18 +34,24 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
+import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
+import org.eclipse.mylyn.internal.tasks.core.TaskTask;
+import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewSummary;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritQueryUtils;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.ReviewTableData;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.UIReviewTable;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGERRITUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
-import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EQueryUtil;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
+import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
+import org.eclipse.mylyn.tasks.ui.AbstractRepositoryConnectorUi;
+import org.eclipse.mylyn.tasks.ui.TasksUiUtil;
+import org.eclipse.mylyn.tasks.ui.editors.TaskEditorInput;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -60,6 +65,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbench;
@@ -72,9 +78,6 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.services.IServiceLocator;
-
-
-
 
 /**
  * @author Jacques Bouthillier
@@ -91,13 +94,14 @@ import org.eclipse.ui.services.IServiceLocator;
  * presented in the view. 
  */
 
+@SuppressWarnings("restriction")
 public class R4EGerritTableView extends ViewPart {
-
 
 	// ------------------------------------------------------------------------
 	// Constants
 	// ------------------------------------------------------------------------
-	/**
+
+    /**
 	 * The ID of the view as specified by the extension.
 	 */
 	public static final String VIEW_ID = "org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView";
@@ -107,8 +111,6 @@ public class R4EGerritTableView extends ViewPart {
 	 */
 	private static final String COMMAND_MESSAGE = "Search Gerrit info ...";
 
-
-	
 	// Labels for the Search 
 	private final String SEARCH_LABEL = "Search for:";
 	private final String SEARCH_BTN = "Search";
@@ -119,13 +121,15 @@ public class R4EGerritTableView extends ViewPart {
 	// ------------------------------------------------------------------------
 	// Member variables
 	// ------------------------------------------------------------------------
-	//
+
 	private static R4EGerritTableView rtv = null;
 
 	private Label 	fSearchForLabel;
 	private Label	fSearchResulLabel;
 
-	private Label 	fRepositoryLabel;
+    private TaskRepository fTaskRepository;
+
+    private Label 	fRepositoryLabel;
 	private Label	fRepositoryResulLabel;
 
 	private Text	fSearchRequestText;
@@ -135,7 +139,6 @@ public class R4EGerritTableView extends ViewPart {
 	private R4EGerritServerUtility fServerUtil = new R4EGerritServerUtility();
 	private Map<TaskRepository, String> fMapRepoServer = null;
 
-	
 	private Action action1;
 	private Action action2;
 	private Action doubleClickAction;
@@ -350,10 +353,32 @@ public class R4EGerritTableView extends ViewPart {
 				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 		doubleClickAction = new Action() {
 			public void run() {
-				ISelection selection = fViewer.getSelection();
-				Object obj = ((IStructuredSelection) selection)
-						.getFirstElement();
-				showMessage("Double-click detected on " + obj.toString());
+
+			    // -------------------------------------------------
+				// Open an editor with the detailed task information
+                // -------------------------------------------------
+
+			    // Retrieve the table selection
+                ISelection selection = fViewer.getSelection();
+                Object obj = ((IStructuredSelection) selection).getFirstElement();
+
+				// Get the task id from the table selection
+				R4EGerritReviewData summary = (R4EGerritReviewData) obj;
+                String mylynTaskId = summary.getAttribute(R4EGerritReviewData.TASK_ID);
+
+                // Fetch the detailed task information from the server
+		        AbstractRepositoryConnectorUi connector = TasksUiPlugin.getConnectorUi(GerritConnector.CONNECTOR_KIND);
+		        ITask task = new TaskTask(connector.getConnectorKind(), fTaskRepository.getRepositoryUrl(), mylynTaskId);
+
+		        // Select the proper editor...
+		        IEditorInput editorInput = connector.getTaskEditorInput(fTaskRepository, task);
+		        if (editorInput == null) {
+		            editorInput = new TaskEditorInput(fTaskRepository, task);
+		        }
+		        String editorId = connector.getTaskEditorId(task);
+
+		        // ... and open it with the task data
+				TasksUiUtil.openEditor(editorInput, editorId, null);
 			}
 		};
 	}
@@ -468,6 +493,7 @@ public class R4EGerritTableView extends ViewPart {
 		}
 	}
 	
+//<<<<<<< gerrit-dashboard
 
 	/**
 	 * Process the commands based on the Gerrit string 
@@ -475,21 +501,20 @@ public class R4EGerritTableView extends ViewPart {
 	 */
 	public void processCommands (String aQuery) {
 		R4EGerritUi.Ftracer.traceInfo("Process command :   "  + aQuery );
-		String lastSAved = fServerUtil.getLastSavedGerritServer();
-		TaskRepository taskRepo = null;
-		if (lastSAved != null) {
+		String lastSaved = fServerUtil.getLastSavedGerritServer();
+		if (lastSaved != null) {
 			//Already saved a Gerrit server, so use it
-			taskRepo  = fServerUtil.getTaskRepo(lastSAved);
+			fTaskRepository  = fServerUtil.getTaskRepo(lastSaved);
 		}
 		
-		if (taskRepo == null) {
+		if (fTaskRepository == null) {
 			//If we did not find the task Repository
 			fMapRepoServer = fServerUtil.getGerritMapping();
 			//Verify How many gerrit server are defined
 			if (fMapRepoServer.size() == 1) {
 				Set<TaskRepository> mapSet = fMapRepoServer.keySet();
 				for (TaskRepository key: mapSet) {
-					taskRepo = key;
+				    fTaskRepository = key;
 					//Save it for the next query time
 					fServerUtil.saveLastGerritServer(key.getRepositoryUrl());
 					break;
@@ -499,7 +524,7 @@ public class R4EGerritTableView extends ViewPart {
 		}
 		
 		//We should have a TaskRepository here, otherwise, the user need to define one
-		if (taskRepo == null) {
+		if (fTaskRepository == null) {
 //			try {
 			String msg = "You need to define a Gerrit repository.";
 			String reason = "No Gerrit repository has been selected yet.";
@@ -510,7 +535,7 @@ public class R4EGerritTableView extends ViewPart {
 //				e.printStackTrace();
 //			}
 		} else {
-			updateTable (taskRepo, aQuery);
+			updateTable (fTaskRepository, aQuery);
 		}
 
 	}
@@ -535,8 +560,8 @@ public class R4EGerritTableView extends ViewPart {
 						"\t query: " + aQuery); //$NON-NLS-1$
 				
 				//If there is only have one Gerrit server, we can proceed as if it was already used before
-				List<R4EGerritReviewSummary> list = R4EQueryUtil.getReviewListFromRepository(aTaskRepo, aQuery);
-				final int numItems = list.size();
+				R4EGerritReviewData[] list = R4EGerritQueryUtils.getReviewList(aTaskRepo, aQuery);
+				final int numItems = list.length;
 				R4EGerritPlugin.Ftracer.traceInfo("Number of review items: " + numItems);
 				fReviewItem.createReviewItem(list, aQuery, aTaskRepo );
 				Display.getDefault().syncExec(new Runnable() {

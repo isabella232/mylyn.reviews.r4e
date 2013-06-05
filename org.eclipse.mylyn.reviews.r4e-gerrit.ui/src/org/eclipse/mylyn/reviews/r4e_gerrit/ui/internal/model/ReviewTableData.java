@@ -14,13 +14,8 @@
  ******************************************************************************/
 package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewSummary;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
-
-
 
 /**
  * @author Jacques Bouthillier
@@ -33,7 +28,7 @@ public class ReviewTableData {
 	// Member variables
 	// ------------------------------------------------------------------------
 
-	private List<R4EGerritReviewSummary> fReviewList = null;
+	private R4EGerritReviewData[] fReviewList = null;
 	
 	private TaskRepository fTaskRepo = null;
 	
@@ -45,7 +40,7 @@ public class ReviewTableData {
 	 * 
 	 * @param Object
 	 */
-	public void createReviewItem(List<R4EGerritReviewSummary> aList, String aQuery, TaskRepository aTaskRepo) {
+	public void createReviewItem(R4EGerritReviewData[] aList, String aQuery, TaskRepository aTaskRepo) {
 
 		// Create the new object
 //		if (fQuery != aQuery) {
@@ -63,13 +58,11 @@ public class ReviewTableData {
 	 * Provide the list of review available for the table list
 	 * @return ReviewTableListItem[]
 	 */
-	public R4EGerritReviewSummary[] getReviews () {
-		if (fReviewList != null) {
-			return fReviewList.toArray(new R4EGerritReviewSummary[] {} );
-			
+	public R4EGerritReviewData[] getReviews () {
+		if (fReviewList == null) {
+	        fReviewList = new R4EGerritReviewData[0];
 		}
-		fReviewList = new ArrayList<R4EGerritReviewSummary>();
-		return fReviewList.toArray(new R4EGerritReviewSummary[] {} );
+		return fReviewList;
 	}
 	
 	/**
@@ -91,7 +84,7 @@ public class ReviewTableData {
     	
 	private void reset() {
 		if (fReviewList != null) {
-			fReviewList.clear();			
+            fReviewList = new R4EGerritReviewData[0];
 		}
 	}
 
