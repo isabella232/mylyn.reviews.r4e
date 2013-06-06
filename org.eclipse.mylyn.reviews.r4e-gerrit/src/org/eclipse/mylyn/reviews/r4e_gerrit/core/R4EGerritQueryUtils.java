@@ -48,7 +48,7 @@ public class R4EGerritQueryUtils {
      * @param query the query
      * @return the list of reviews matching the query
      */
-    public static R4EGerritReviewData[] getReviewList(TaskRepository repository, String queryType) {
+    public static R4EGerritReviewData[] getReviewList(TaskRepository repository, String queryType) throws R4EQueryException {
 
         // Format the query
         IRepositoryQuery query = new RepositoryQuery(repository.getConnectorKind(), "query"); //$NON-NLS-1$
@@ -59,11 +59,8 @@ public class R4EGerritQueryUtils {
         R4EGerritTaskDataCollector resultCollector = new R4EGerritTaskDataCollector();
         IStatus status = connector.performQuery(repository, query, resultCollector, null, new NullProgressMonitor());
         if (!status.isOK()) {
-            // TODO Log an error
-//            R4EGerritUi.Ftracer.traceWarning(status.toString());
-//            String msg = "Unable to read the Gerrit server.";
-//            UIUtils.showErrorDialog(msg, status.toString());
-            return null;
+            String msg = "Unable to read the Gerrit server.";
+            throw new R4EQueryException(status, msg);
         }        
 
         // Extract the result

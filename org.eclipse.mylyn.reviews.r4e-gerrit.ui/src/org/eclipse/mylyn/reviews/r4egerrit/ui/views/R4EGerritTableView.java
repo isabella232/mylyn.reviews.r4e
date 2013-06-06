@@ -40,6 +40,7 @@ import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritQueryUtils;
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EQueryException;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.ReviewTableData;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.UIReviewTable;
@@ -557,31 +558,39 @@ public class R4EGerritTableView extends ViewPart {
 				R4EGerritPlugin.Ftracer.traceInfo("repository:   " + aTaskRepo.getUrl() +
 						"\t query: " + aQuery); //$NON-NLS-1$
 				
-				//If there is only have one Gerrit server, we can proceed as if it was already used before
-				R4EGerritReviewData[] list = R4EGerritQueryUtils.getReviewList(aTaskRepo, aQuery);
-				final int numItems = list.length;
-				R4EGerritPlugin.Ftracer.traceInfo("Number of review items: " + numItems);
-				fReviewItem.createReviewItem(list, aQuery, aTaskRepo );
-				Display.getDefault().syncExec(new Runnable() {
+				// If there is only have one Gerrit server, we can proceed as if it was already used before
+				IStatus status = null;
+				try {
+	                R4EGerritReviewData[] list = R4EGerritQueryUtils.getReviewList(aTaskRepo, aQuery);
+	                final int numItems = list.length;
+	                R4EGerritPlugin.Ftracer.traceInfo("Number of review items: " + numItems);
+	                fReviewItem.createReviewItem(list, aQuery, aTaskRepo );
+	                Display.getDefault().syncExec(new Runnable() {
+	                    @Override
+	                    public void run() {
+	                        setSearchLabel (aQuery);
+	                        setSearchText (aQuery);
+	                        setRepositoryLabel (aTaskRepo.getRepositoryLabel());
+	                        fViewer.setInput(fReviewItem.getReviews()); 
+	                        fViewer.refresh();
+	                        if (numItems < 1) {
+	                            //Display a popup, we did not find any items to display
+	                            String msg = "Query ( " + aQuery + ") on " + aTaskRepo.getUrl();
+	                            String reason = "Return " + numItems  + " items.";
+	                            UIUtils.showErrorDialog(msg, reason);
+	                        }
+	                    }
+	                });
+	                status = Status.OK_STATUS;
+                }
+                catch (R4EQueryException e) {
+                    status = e.getStatus();
+                    R4EGerritPlugin.Ftracer.traceWarning(status.toString());
+                    UIUtils.showErrorDialog(e.getMessage(), status.toString());
+                }
 
-					@Override
-					public void run() {
-						setSearchLabel (aQuery);
-						setSearchText (aQuery);
-						setRepositoryLabel (aTaskRepo.getRepositoryLabel());
-						fViewer.setInput(fReviewItem.getReviews());	
-						fViewer.refresh();
-						if (numItems < 1) {
-							//Display a popup, we did not find any items to display
-							String msg = "Query ( " + aQuery + ") on " + aTaskRepo.getUrl();
-							String reason = "Return " + numItems  + " items.";
-							UIUtils.showErrorDialog(msg, reason);
-						}
-					}
-				});
-			
 				aMonitor.done();
-				return Status.OK_STATUS;
+				return status;
 			}
 		};
 		job.setUser(true);
