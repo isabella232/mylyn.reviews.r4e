@@ -135,8 +135,8 @@ public class AddGerritSiteHandler extends AbstractHandler {
 
 		//Open the Dialogue to enter a new Gerrit URL
 		Object dialogObj = openDialogue ();
-		//Set the table view with the last TaskRepo and the default query
-		reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
+//		//Set the table view with the last TaskRepo and the default query
+//		reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
 		
 		return dialogObj;
 	}
@@ -189,6 +189,12 @@ public class AddGerritSiteHandler extends AbstractHandler {
 					/*                                                   */
 					/*****************************************************/
 					fServerUtil.getReviewListFromServer ();
+					R4EGerritTableView reviewTableView = R4EGerritTableView
+							.getActiveView();
+
+					//Set the table view with the last TaskRepo and the default query
+					reviewTableView.processCommands(GerritQuery.MY_WATCHED_CHANGES);
+
 				}
 				
 				R4EGerritPlugin.Ftracer.traceInfo("AFTER: repository: :  " + taskRepository.getUrl() + 
