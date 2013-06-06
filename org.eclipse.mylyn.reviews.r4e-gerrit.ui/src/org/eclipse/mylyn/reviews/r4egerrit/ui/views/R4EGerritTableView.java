@@ -493,8 +493,6 @@ public class R4EGerritTableView extends ViewPart {
 		}
 	}
 	
-//<<<<<<< gerrit-dashboard
-
 	/**
 	 * Process the commands based on the Gerrit string 
 	 * @param String aQuery
@@ -509,7 +507,7 @@ public class R4EGerritTableView extends ViewPart {
 		
 		if (fTaskRepository == null) {
 			//If we did not find the task Repository
-			fMapRepoServer = fServerUtil.getGerritMapping();
+			fMapRepoServer = R4EGerritServerUtility.getGerritMapping();
 			//Verify How many gerrit server are defined
 			if (fMapRepoServer.size() == 1) {
 				Set<TaskRepository> mapSet = fMapRepoServer.keySet();
@@ -594,28 +592,28 @@ public class R4EGerritTableView extends ViewPart {
 		
 	}
 
-	/**
-	 * Reset the data in the table.
-	 * 
-	 */
-	private void resetData() {
-		//Reset the Search data
-		Display.getDefault().syncExec(new Runnable() {
-			
-			@Override
-			public void run() {
-				setSearchLabel("");
-				setSearchText ("");
-				setRepositoryLabel ("");
-				// Reset the review table
-				fReviewItem.createReviewItem(null, null, null);
-				fViewer.setInput(fReviewItem.getReviews());	
-				fViewer.refresh();
-				
-			}
-		});
-
-	}
+//	/**
+//	 * Reset the data in the table.
+//	 * 
+//	 */
+//	private void resetData() {
+//		//Reset the Search data
+//		Display.getDefault().syncExec(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				setSearchLabel("");
+//				setSearchText ("");
+//				setRepositoryLabel ("");
+//				// Reset the review table
+//				fReviewItem.createReviewItem(null, null, null);
+//				fViewer.setInput(fReviewItem.getReviews());	
+//				fViewer.refresh();
+//				
+//			}
+//		});
+//
+//	}
 
 	private void setSearchLabel (String aSt) {
 		if (!fSearchResulLabel.isDisposed() ) {

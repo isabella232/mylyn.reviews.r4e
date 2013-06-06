@@ -13,6 +13,7 @@
 package org.eclipse.mylyn.reviews.r4e_gerrit.core;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +99,7 @@ public class R4EGerritReviewData {
      * Date format
      */
     private static SimpleDateFormat FORMAT_TODAY = new SimpleDateFormat("h:mm a");
-    private static SimpleDateFormat FORMAT_FULL = new SimpleDateFormat("MMM d");
+    private static SimpleDateFormat FORMAT_FULL  = new SimpleDateFormat("MMM d");
 
     //-------------------------------------------------------------------------
     // Attributes
@@ -107,7 +108,7 @@ public class R4EGerritReviewData {
     /*
      * Map of review attributes 
      */
-    private Map<String, String> fReviewSummaryAttributes;
+    private Map<String, String> fReviewAttributes;
 
     //-------------------------------------------------------------------------
     // Constructor
@@ -123,7 +124,7 @@ public class R4EGerritReviewData {
         TaskAttribute root = result.getRoot();
         Map<String, TaskAttribute> attributes = root.getAttributes();
 
-        fReviewSummaryAttributes = new HashMap<String, String>();
+        fReviewAttributes = new HashMap<String, String>();
         
         setAttribute(TASK_ID,           result.getTaskId());
         setAttribute(SHORT_CHANGE_ID,   getValue(attributes.get(SHORT_CHANGE_ID)));
@@ -169,37 +170,68 @@ public class R4EGerritReviewData {
      * @param value the review attribute value
      */
     public void setAttribute(String key, String value) {
-        fReviewSummaryAttributes.put(key, value);
+        fReviewAttributes.put(key, value);
     }
 
     /**
      * @return the requested review attribute
      */
     public String getAttribute(String key) {
-        return fReviewSummaryAttributes.get(key);
+        return fReviewAttributes.get(key);
     }
 
     /**
-     * @return the requested Gerrit Review attribute as a string formatted
-     *         depending if the date is the same day or a different day
+     * Format the requested Gerrit Review attribute as a date string.
+     * As in the Gerrit web UI, the output format depends on the date
+     * relation with 'today':
+     * 
+     * Same day:                 'hh:mm am/pm'
+     * Same year, different day: 'Mon DD'
+     * Different year:           'Mon DD, YYYY' (not implemented)
+     *         
+     * @param key one of { DATE_CREATION, DATE_MODIFICATION, DATE_COMPLETION }
+     *
+     * @return
      */
-    public String getAttributeAsDate(String aKey) {
-        Date today = new Date();
-        // R4EGerritPlugin.Ftracer.traceInfo("Date today:   "
-        // + today );
-        Date keyDate = new Date(Long.parseLong(fReviewSummaryAttributes.get(aKey)));
-        if (keyDate.getDay() == today.getDay()) {
-            // Same Day, so just display the time
-            // R4EGerritPlugin.Ftracer.traceInfo("Format today:   "
-            // + FORMAT_TODAY.format(today) );
-            return FORMAT_TODAY.format(today);
-        } else {
-            // Another day, so display the day with the time
-            // R4EGerritPlugin.Ftracer.traceInfo("Format FULL:   "
-            // + FORMAT_FULL.format(keyDate) );
-            return FORMAT_FULL.format(keyDate);
+    public String getAttributeAsDate(String key) {
+        // Validate the supplied key
+        if (!key.equals(DATE_CREATION) && !key.equals(DATE_MODIFICATION) && !key.equals(DATE_COMPLETION)) {
+            return "";
         }
 
+        // Retrieve the date
+        String rawDate = fReviewAttributes.get(key);
+        if (rawDate == null) {
+            return "";
+        }
+
+        // Format the date
+        Date date = new Date(Long.parseLong(rawDate));
+        if (isToday(date)) {
+            return FORMAT_TODAY.format(date);
+        } else {
+            return FORMAT_FULL.format(date);
+        }
+    }
+
+    /**
+     * Indicates if a date is 'today' 
+     * 
+     * @param date the date to check against 'today'
+     * @return true if 'today'
+     */
+    private boolean isToday(Date date) {
+        Calendar cal1 = Calendar.getInstance(); // today
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(date);
+        int year = cal2.get(Calendar.YEAR);
+        int day  = cal2.get(Calendar.DAY_OF_YEAR);
+
+        boolean sameDay =
+            (cal1.get(Calendar.YEAR)        == cal2.get(Calendar.YEAR) &&
+            (cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)));
+
+        return sameDay;
     }
 
     //-------------------------------------------------------------------------
