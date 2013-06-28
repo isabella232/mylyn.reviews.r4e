@@ -106,7 +106,7 @@ public class R4EGerritServerUtility {
 	 * Map the configured Gerrit server found in the TaskList
 	 * @return Map<TaskRepository, String>
 	 */
-	private Map<TaskRepository, String> mapConfiguredGerritServer () {
+	public Map<TaskRepository, String> mapConfiguredGerritServer () {
 		//Reset the list of Gerrit server
 		fResultTask.clear();
 		
@@ -389,25 +389,25 @@ public class R4EGerritServerUtility {
 	 * Read the Gerrit server to populate the list of reviews
 	 */
 	public void getReviewListFromServer () {
-		//Get the Gerrit URL to query
-		String urlToUsed = getLastSavedGerritServer ();
-		
-		if (urlToUsed != null) {
-			//Initiate the request to populate the list of Reviews
-		    R4EGerritPlugin.Ftracer.traceInfo("use the following Gerrit URL to populate the list of reviews: " +  urlToUsed);
-			
-			// TODO: Make it pick the right repository
-			Set<TaskRepository> gerritRepositories = fResultTask.keySet();
-			Iterator<TaskRepository> it = gerritRepositories.iterator();
-			if (it.hasNext()) {
-	            TaskRepository repository = it.next();
-	     //       List<R4EGerritReviewSummary> reviews = getReviewListFromRepository(repository, GerritQuery.MY_WATCHED_CHANGES);
-	            // TODO: populate the Gerrit Dashboard with 'reviews'
-			}
-		} else {
-			//Open the dialogue to populate a Gerrit server, Should not happen here
-		    R4EGerritPlugin.Ftracer.traceInfo("Need to open the dialogue to populate a gerrit server" ); 			
-		}
+//		//Get the Gerrit URL to query
+//		String urlToUsed = getLastSavedGerritServer ();
+//		
+//		if (urlToUsed != null) {
+//			//Initiate the request to populate the list of Reviews
+//		    R4EGerritPlugin.Ftracer.traceInfo("use the following Gerrit URL to populate the list of reviews: " +  urlToUsed);
+//			
+//			// TODO: Make it pick the right repository
+//			Set<TaskRepository> gerritRepositories = fResultTask.keySet();
+//			Iterator<TaskRepository> it = gerritRepositories.iterator();
+//			if (it.hasNext()) {
+//	            TaskRepository repository = it.next();
+//	     //       List<R4EGerritReviewSummary> reviews = getReviewListFromRepository(repository, GerritQuery.MY_WATCHED_CHANGES);
+//	            // TODO: populate the Gerrit Dashboard with 'reviews'
+//			}
+//		} else {
+//			//Open the dialogue to populate a Gerrit server, Should not happen here
+//		    R4EGerritPlugin.Ftracer.traceInfo("Need to open the dialogue to populate a gerrit server" ); 			
+//		}
 	}
 //
 //    /**

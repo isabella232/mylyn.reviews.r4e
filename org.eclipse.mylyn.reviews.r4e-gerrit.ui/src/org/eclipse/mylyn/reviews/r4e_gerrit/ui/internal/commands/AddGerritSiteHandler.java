@@ -159,7 +159,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 			public IStatus run(final IProgressMonitor aMonitor) {
 				aMonitor.beginTask(COMMAND_MESSAGE, IProgressMonitor.UNKNOWN);
 						
-				final TaskRepository taskRepository = getTaskRepository(fServerUtil.getLastSavedGerritServer()); 
+				TaskRepository taskRepository = getTaskRepository(fServerUtil.getLastSavedGerritServer()); 
 				
 				R4EGerritPlugin.Ftracer.traceInfo("repository:   " + taskRepository.getUrl()); //$NON-NLS-1$
 				
@@ -174,6 +174,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 				});
 				
 				//When the wizard is closed
+				taskRepository = wizard.getRepository();//Possibility the taskRepository has changed
 				if (taskRepository.getUrl().isEmpty() || 
 						taskRepository.getUrl().endsWith(R4EUIConstants.DEFAULT_REPOSITORY)) {
 					//User selected the Cancel button
@@ -181,6 +182,12 @@ public class AddGerritSiteHandler extends AbstractHandler {
 				} else {
 				    R4EGerritPlugin.Ftracer.traceInfo("AFTER: repository: :  FINISH " ); //$NON-NLS-1$		
 					fServerUtil.saveLastGerritServer(taskRepository.getUrl());
+					//Test if we already have the Gerrit server in our internal map
+					TaskRepository taskRepositoryTmp = fServerUtil.getTaskRepo (taskRepository.getUrl());
+					if (taskRepositoryTmp == null) {
+						//Need to re-map our internal Gerrit Repo
+						fServerUtil.mapConfiguredGerritServer();
+					}
 					/*****************************************************/
 					/*                                                   */
 					/*    Now, we need to get the Gerrit repo data       */
