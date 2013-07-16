@@ -282,7 +282,7 @@ public class NewAnomalyInputDialog extends FormDialog implements IAnomalyInputDi
 			fRuleReferenceValue = null;
 			if (fRuleTreeViewer.getSelection() instanceof IStructuredSelection) {
 				final IStructuredSelection selection = (IStructuredSelection) fRuleTreeViewer.getSelection();
-				if (null != selection) {
+				if (null != selection && selection.getFirstElement() instanceof R4EUIRule) {
 					fRuleReferenceValue = (R4EUIRule) selection.getFirstElement();
 				}
 			}
