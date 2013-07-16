@@ -254,9 +254,9 @@ public class PreferenceConstants { // $codepro.audit.disable convertClassToInter
 					store.setDefault(PreferenceConstants.P_USER_EMAIL, userInfos.get(0).getEmail());
 				}
 			} catch (NamingException e) {
-				R4EUIPlugin.Ftracer.traceError("Exception: " + e.toString() + " (" + e.getMessage() + ")");
+				R4EUIPlugin.Ftracer.traceError("Exception: " + e.toString() + " (" + e.getMessage() + ")"); //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 			} catch (IOException e) {
-				R4EUIPlugin.Ftracer.traceWarning("Exception: " + e.toString() + " (" + e.getMessage() + ")");
+				R4EUIPlugin.Ftracer.traceWarning("Exception: " + e.toString() + " (" + e.getMessage() + ")"); //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 			}
 		}
 	}
