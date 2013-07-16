@@ -38,8 +38,10 @@ import org.eclipse.mylyn.reviews.r4e.ui.internal.model.R4EUIModelController;
 import org.eclipse.mylyn.reviews.r4e.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e.ui.internal.utils.UIUtils;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.menus.CommandContributionItem;
 
 /**
  * @author Sebastien Dubois
@@ -91,55 +93,60 @@ public class NewChildElementHandler extends AbstractHandler {
 						R4EUIModelController.setJobInProgress(true);
 						monitor.beginTask(COMMAND_MESSAGE, IProgressMonitor.UNKNOWN);
 
-						for (final ReviewComponent tempModelComponent : tempModelComponents) {
-							R4EUIPlugin.Ftracer.traceInfo("Adding child to element " + element.getName());
-							IR4EUIModelElement newElement = null;
-							try {
-								newElement = element.createChildren(tempModelComponent);
-								R4EUIModelController.setJobInProgress(false);
-								UIUtils.setNavigatorViewFocus(newElement, AbstractTreeViewer.ALL_LEVELS);
-							} catch (ResourceHandlingException e) {
-								UIUtils.displayResourceErrorDialog(e);
-
-								//Remove object if partially created
+						if (tempModelComponents != null) {
+							for (final ReviewComponent tempModelComponent : tempModelComponents) {
+								R4EUIPlugin.Ftracer.traceInfo("Adding child to element " + element.getName());
+								IR4EUIModelElement newElement = null;
 								try {
-									element.removeChildren(newElement, true);
-								} catch (ResourceHandlingException e1) {
-									UIUtils.displayResourceErrorDialog(e1);
-								} catch (OutOfSyncException e1) {
-									UIUtils.displaySyncErrorDialog(e1);
-								} catch (CompatibilityException e1) {
-									UIUtils.displayCompatibilityErrorDialog(e1);
-								}
+									newElement = element.createChildren(tempModelComponent);
+									R4EUIModelController.setJobInProgress(false);
+									UIUtils.setNavigatorViewFocus(newElement, AbstractTreeViewer.ALL_LEVELS);
+								} catch (ResourceHandlingException e) {
+									UIUtils.displayResourceErrorDialog(e);
 
-							} catch (CompatibilityException e) {
-								UIUtils.displayCompatibilityErrorDialog(e);
+									//Remove object if partially created
+									try {
+										element.removeChildren(newElement, true);
+									} catch (ResourceHandlingException e1) {
+										UIUtils.displayResourceErrorDialog(e1);
+									} catch (OutOfSyncException e1) {
+										UIUtils.displaySyncErrorDialog(e1);
+									} catch (CompatibilityException e1) {
+										UIUtils.displayCompatibilityErrorDialog(e1);
+									}
 
-								//Remove object if partially created
-								try {
-									element.removeChildren(newElement, true);
-								} catch (ResourceHandlingException e1) {
-									UIUtils.displayResourceErrorDialog(e1);
-								} catch (OutOfSyncException e1) {
-									UIUtils.displaySyncErrorDialog(e1);
-								} catch (CompatibilityException e1) {
-									UIUtils.displayCompatibilityErrorDialog(e1);
-								}
-							} catch (OutOfSyncException e) {
-								UIUtils.displaySyncErrorDialog(e);
+								} catch (CompatibilityException e) {
+									UIUtils.displayCompatibilityErrorDialog(e);
 
-								//Remove object if partially created
-								try {
-									element.removeChildren(newElement, true);
-								} catch (ResourceHandlingException e1) {
-									UIUtils.displayResourceErrorDialog(e1);
-								} catch (OutOfSyncException e1) {
-									UIUtils.displaySyncErrorDialog(e1);
-								} catch (CompatibilityException e1) {
-									UIUtils.displayCompatibilityErrorDialog(e1);
+									//Remove object if partially created
+									try {
+										element.removeChildren(newElement, true);
+									} catch (ResourceHandlingException e1) {
+										UIUtils.displayResourceErrorDialog(e1);
+									} catch (OutOfSyncException e1) {
+										UIUtils.displaySyncErrorDialog(e1);
+									} catch (CompatibilityException e1) {
+										UIUtils.displayCompatibilityErrorDialog(e1);
+									}
+								} catch (OutOfSyncException e) {
+									UIUtils.displaySyncErrorDialog(e);
+
+									//Remove object if partially created
+									try {
+										element.removeChildren(newElement, true);
+									} catch (ResourceHandlingException e1) {
+										UIUtils.displayResourceErrorDialog(e1);
+									} catch (OutOfSyncException e1) {
+										UIUtils.displaySyncErrorDialog(e1);
+									} catch (CompatibilityException e1) {
+										UIUtils.displayCompatibilityErrorDialog(e1);
+									}
 								}
 							}
+						} else {
+							R4EUIPlugin.Ftracer.traceInfo("Adding child to element NULL");
 						}
+
 						R4EUIModelController.setJobInProgress(false);
 						monitor.done();
 						return Status.OK_STATUS;
@@ -172,6 +179,21 @@ public class NewChildElementHandler extends AbstractHandler {
 				return R4EUIModelController.getRootElement();
 			}
 		}
+
+		if (triggerObject instanceof MenuItem) {
+			Object data = ((MenuItem) triggerObject).getData();
+			if (data != null && data instanceof CommandContributionItem) {
+				CommandContributionItem contribItem = (CommandContributionItem) data;
+				R4EUIPlugin.Ftracer.traceInfo("Menu command selected: " + contribItem.getData().label);
+				if (contribItem.getData().label.equals(R4EUIConstants.NEW_REVIEW_GROUP_LABEL)) {
+					R4EUIPlugin.Ftracer.traceInfo("Menu command selected  Group, return the root");
+					//Add element to the root of the tree
+					return R4EUIModelController.getRootElement();
+				}
+
+			}
+		}
+
 		final IStructuredSelection selection = (IStructuredSelection) R4EUIModelController.getNavigatorView()
 				.getTreeViewer()
 				.getSelection();
