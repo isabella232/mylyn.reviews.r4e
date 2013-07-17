@@ -26,6 +26,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.mylyn.reviews.frame.core.model.ReviewComponent;
@@ -41,7 +43,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Widget;
-import org.eclipse.ui.menus.CommandContributionItem;
 
 /**
  * @author Sebastien Dubois
@@ -182,10 +183,11 @@ public class NewChildElementHandler extends AbstractHandler {
 
 		if (triggerObject instanceof MenuItem) {
 			Object data = ((MenuItem) triggerObject).getData();
-			if (data != null && data instanceof CommandContributionItem) {
-				CommandContributionItem contribItem = (CommandContributionItem) data;
-				R4EUIPlugin.Ftracer.traceInfo("Menu command selected: " + contribItem.getData().label);
-				if (contribItem.getData().label.equals(R4EUIConstants.NEW_REVIEW_GROUP_LABEL)) {
+			if (data != null && data instanceof ContributionItem) {
+				ContributionItem contribItem = (ContributionItem) data;
+				R4EUIPlugin.Ftracer.traceInfo("Menu command selected: " + contribItem.getId());
+				IContributionItem[] items = contribItem.getParent().getItems();
+				if (contribItem.getId().endsWith(R4EUIConstants.NEW_CHILD_ELEMENT_COMMAND)) {
 					R4EUIPlugin.Ftracer.traceInfo("Menu command selected  Group, return the root");
 					//Add element to the root of the tree
 					return R4EUIModelController.getRootElement();
@@ -193,7 +195,7 @@ public class NewChildElementHandler extends AbstractHandler {
 
 			}
 		}
-
+		R4EUIPlugin.Ftracer.traceInfo("getParentElement(): look for selection");
 		final IStructuredSelection selection = (IStructuredSelection) R4EUIModelController.getNavigatorView()
 				.getTreeViewer()
 				.getSelection();
@@ -203,6 +205,8 @@ public class NewChildElementHandler extends AbstractHandler {
 			//Add element to the root of the tree
 			element = R4EUIModelController.getRootElement();
 		}
+		R4EUIPlugin.Ftracer.traceInfo("getParentElement(): return element: " + element.getName());
+
 		return element;
 	}
 }

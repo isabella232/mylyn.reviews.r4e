@@ -1597,11 +1597,6 @@ public class R4EUIConstants { // $codepro.audit.disable convertClassToInterface
 	public static final String NEW_REVIEW_GROUP_COMMAND_TOOLTIP = "Add a New Review Group Element";
 
 	/**
-	 * Field NEW_REVIEW_GROUP_LABEL. (value is ""New Review Group"")
-	 */
-	public static final String NEW_REVIEW_GROUP_LABEL = "New Review Group";
-
-	/**
 	 * Field NEW_CHILD_ELEMENT_COMMAND_MNEMONIC. (value is ""A"")
 	 */
 	public static final String NEW_CHILD_ELEMENT_COMMAND_MNEMONIC = "A";
