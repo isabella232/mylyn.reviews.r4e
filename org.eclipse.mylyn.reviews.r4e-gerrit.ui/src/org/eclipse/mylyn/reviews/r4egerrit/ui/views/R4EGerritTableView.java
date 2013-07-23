@@ -67,14 +67,12 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
@@ -140,8 +138,6 @@ public class R4EGerritTableView extends ViewPart {
 	private R4EGerritServerUtility fServerUtil = new R4EGerritServerUtility();
 	private Map<TaskRepository, String> fMapRepoServer = null;
 
-	private Action action1;
-	private Action action2;
 	private Action doubleClickAction;
 
 	/**
@@ -310,14 +306,9 @@ public class R4EGerritTableView extends ViewPart {
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
-		// manager.add(action1);
-		// manager.add(new Separator());
-		// manager.add(action2);
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
-		manager.add(action1);
-		manager.add(action2);
 		CommandContributionItem[] contribItems = buildContributions();
 		for (int index = 0; index < contribItems.length; index++) {
 			manager.add(contribItems[index]);			
@@ -327,31 +318,9 @@ public class R4EGerritTableView extends ViewPart {
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager) {
-		// manager.add(action1);
-		// manager.add(action2);
-		// manager.add(action1);
 	}
 
 	private void makeActions() {
-		action1 = new Action() {
-			public void run() {
-				showMessage("Action 1 executed");
-			}
-		};
-		action1.setText("Action 1");
-		action1.setToolTipText("Action 1 tooltip");
-		action1.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
-				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
-		action2 = new Action() {
-			public void run() {
-				showMessage("Action 2 executed");
-			}
-		};
-		action2.setText("Action 2");
-		action2.setToolTipText("Action 2 tooltip");
-		action2.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
-				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 		doubleClickAction = new Action() {
 			public void run() {
 
