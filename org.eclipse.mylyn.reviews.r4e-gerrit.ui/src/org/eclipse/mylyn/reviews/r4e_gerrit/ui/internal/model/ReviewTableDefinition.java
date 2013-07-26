@@ -30,16 +30,16 @@ import java.util.ArrayList;
 public enum ReviewTableDefinition {
 	// 			Name 			Width 	Resize Moveable
 	   STARRED(	"", 			20, 	false,	true), 
-	   ID(		"ID", 			70, 	false,	true), 
+	   ID(		"ID", 			80, 	false,	true), 
 	   SUBJECT(	"Subject",	 	200, 	true,	true), 
-	   OWNER(	"Owner", 		100, 	true, 	true), 
+	   OWNER(	"Owner", 		140, 	true, 	true), 
 	   PROJECT(	"Project", 		200, 	true, 	true), 
 	   BRANCH(	"Branch", 		100, 	true, 	true), 
-	   UPDATED(	"Updated", 		65, 	true, 	true), 
+	   UPDATED(	"Updated", 		75, 	true, 	true), 
 	   CR(		"CR", 			28, 	false, 	true), 
-	   IC(		"IC", 			25, 	false, 	true), 
-	   VERIFY(	"V", 			25,		false, 	true);
-
+	   IC(		"IC", 			28, 	false, 	true), 
+	   VERIFY(	"V", 			28,		false, 	true);
+	   
 	private String fHeader;
 	private int fwidth;
 	private Boolean fResize;
@@ -75,6 +75,14 @@ public enum ReviewTableDefinition {
 			listName.add(st.getName());
 		}
 		return listName.toArray(new String[] {});
+	}
+
+	public static int getMinimumWidth() {
+		int width = 0;
+		for (int index = 0; index < ReviewTableDefinition.values().length; index++) {
+			width += ReviewTableDefinition.values()[index].getWidth();
+		}
+		return width;
 	}
 
 	// public static int getColumnNumber (String st) {

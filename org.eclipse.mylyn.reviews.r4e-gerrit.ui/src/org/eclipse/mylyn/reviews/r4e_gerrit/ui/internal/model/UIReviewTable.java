@@ -14,6 +14,8 @@
  ******************************************************************************/
 package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model;
 
+
+
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.viewers.ISelection;
@@ -42,17 +44,14 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-
-
 /**
  * @author Jacques Bouthillier
  * @version $Revision: 1.0 $
- *
+ * 
  */
 public class UIReviewTable {
-	
 
-	private final int TABLE_STYLE = ( SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
+	private final int TABLE_STYLE = (SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 
 	// ------------------------------------------------------------------------
 	// Variables
@@ -64,7 +63,7 @@ public class UIReviewTable {
 	// ------------------------------------------------------------------------
 
 	public UIReviewTable() {
-		
+
 	}
 
 	// ------------------------------------------------------------------------
@@ -72,65 +71,64 @@ public class UIReviewTable {
 	// ------------------------------------------------------------------------
 
 	public TableViewer createTableViewerSection(Composite aParent) {
-		//Create a form to maintain the search data
-		Composite viewerForm =  UIUtils.createsGeneralComposite(aParent, SWT.BORDER | SWT.SHADOW_ETCHED_IN);
+		// Create a form to maintain the search data
+		Composite viewerForm = UIUtils.createsGeneralComposite(aParent,
+				SWT.BORDER | SWT.SHADOW_ETCHED_IN);
 
 		GridData gribDataViewer = new GridData(GridData.FILL_BOTH);
 		viewerForm.setLayoutData(gribDataViewer);
-	
-		//Add a listener when the view is resized
+
+		// Add a listener when the view is resized
 		GridLayout layout = new GridLayout();
 		layout.numColumns = ReviewTableDefinition.values().length;
 		layout.makeColumnsEqualWidth = false;
-		
-		viewerForm.setLayout(layout);
-		
 
-		//Create the table viewer to maintain the list of reviews
+		viewerForm.setLayout(layout);
+
+		// Create the table viewer to maintain the list of reviews
 		fViewer = new TableViewer(viewerForm, TABLE_STYLE);
 		fViewer = buildAndLayoutTable(fViewer);
 
-		//Set the content provider and the Label provider and the sorter
+		// Set the content provider and the Label provider and the sorter
 		fViewer.setContentProvider(new ReviewTableContentProvider());
-		
-		//Set the viewer for the provider
+
+		// Set the viewer for the provider
 		ReviewTableLabelProvider tableProvider = new ReviewTableLabelProvider();
 		fViewer.setLabelProvider(tableProvider);
 		ReviewTableSorter.bind(fViewer);
-				
+
 		// Create the help context id for the viewer's control
-//		PlatformUI
-//				.getWorkbench()
-//				.getHelpSystem()
-//				.setHelp(fViewer.getControl(),
-//						"org.eclipse.mylyn.reviews.r4e-gerrit.ui.viewer");
-		
+		// PlatformUI
+		// .getWorkbench()
+		// .getHelpSystem()
+		// .setHelp(fViewer.getControl(),
+		// "org.eclipse.mylyn.reviews.r4e-gerrit.ui.viewer");
+
 		//
 		fViewer.getTable().addSelectionListener(new SelectionListener() {
-			
+
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// TODO Auto-generated method stub
-				R4EGerritUi.Ftracer.traceInfo("Table selection: " + e.toString());
+				R4EGerritUi.Ftracer.traceInfo("Table selection: "
+						+ e.toString());
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
-		
+
 		// Add a Key event and mouse down listener
-		fViewer.getTable().addListener(SWT.MouseDown,  mouseButtonListener);
-	//	fViewer.getTable().addKeyListener(keyEventListener);
-			
+		fViewer.getTable().addListener(SWT.MouseDown, mouseButtonListener);
+		// fViewer.getTable().addKeyListener(keyEventListener);
 
 		return fViewer;
 
 	}
-	
-	
+
 	/**
 	 * Create each column for the List of Reviews
 	 * 
@@ -164,10 +162,34 @@ public class UIReviewTable {
 			
 			@Override
 			public void controlResized(ControlEvent e) {
+				table.setRedraw(false);
 				Point tableSize = table.getSize();
 				Point parentSize = table.getParent().getSize();
 				//Adjust the width  according to its parent
+				int minimumTableWidth = ReviewTableDefinition.getMinimumWidth();
+				int mimimumSubjectWidth = ReviewTableDefinition.SUBJECT.getWidth();
+				int minProjectWidth = ReviewTableDefinition.PROJECT.getWidth();
+				int proAndSubjetWidth = mimimumSubjectWidth + minProjectWidth;
+				
+				//Adjust the subject and project column to take the remaining space
+				int scrollWidth = table.getVerticalBar().getSize().x;
+				int computeExtraWidth = parentSize.x - 10 - ( minimumTableWidth ) - scrollWidth ;
+				int newSubjectWidth = mimimumSubjectWidth;
+				int newProjectWidth = minProjectWidth;
+				//If extra space, redistribute it to specific column
+				if (computeExtraWidth > 0) {
+					//Assign some to subject and some to Project
+					int value = 2*computeExtraWidth  /3;
+					newSubjectWidth = mimimumSubjectWidth + value; // 2/3 of the extra
+					newProjectWidth = minProjectWidth + computeExtraWidth- value;       // 1/3 of the extra
+				}
+				//Subject column
+				table.getColumn(2).setWidth(newSubjectWidth);
+				//Project column
+				table.getColumn(4).setWidth(newProjectWidth);
+
 				table.setSize(parentSize.x - 10, tableSize.y);
+				table.setRedraw(true);
 				
 			}
 			
@@ -183,51 +205,55 @@ public class UIReviewTable {
 
 		return aViewer;
 	}
-
 	
+
 	/**
 	 * Create each column in the review table list
+	 * 
 	 * @param ReviewTableDefinition
 	 * @return TableViewerColumn
 	 */
-	private TableViewerColumn createTableViewerColumn(ReviewTableDefinition  aTableInfo) {
+	private TableViewerColumn createTableViewerColumn(
+			ReviewTableDefinition aTableInfo) {
 		final TableViewerColumn viewerColumn = new TableViewerColumn(fViewer,
 				SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();
 		column.setText(aTableInfo.getName());
-		column.setWidth(aTableInfo.getWidth());
+		column.setWidth(aTableInfo.getWidth());			
 		column.setResizable(aTableInfo.getResize());
 		column.setMoveable(aTableInfo.getMoveable());
 		return viewerColumn;
 
 	}
-	
-
 
 	private Listener mouseButtonListener = new Listener() {
 		public void handleEvent(Event aEvent) {
-			R4EGerritUi.Ftracer.traceInfo("mouseButtonListener() for " + aEvent.button);
+			R4EGerritUi.Ftracer.traceInfo("mouseButtonListener() for "
+					+ aEvent.button);
 			switch (aEvent.type) {
 			case SWT.MouseDown:
-				//Left Click
+				// Left Click
 				if (aEvent.button == 1) {
 
-						// Process the Item table handling
-						processItemSelection();
+					// Process the Item table handling
+					processItemSelection();
 
-//					singleClickFocus(tableIndex);
+					// singleClickFocus(tableIndex);
 
 				}
-				//For now, use button 2 to modify the starred value column 1
+				// For now, use button 2 to modify the starred value column 1
 				if (aEvent.button == 2) {
-					//Select the new item in the table
+					// Select the new item in the table
 					Table table = fViewer.getTable();
 					table.deselectAll();
 					Point p = new Point(aEvent.x, aEvent.y);
 					TableItem tbi = fViewer.getTable().getItem(p);
-					table.setSelection(tbi);
-					
-					//Execute the command to adjust the column: ID with the starred information
+					if (tbi != null) {
+						table.setSelection(tbi);						
+					}
+
+					// Execute the command to adjust the column: ID with the
+					// starred information
 					AdjustMyStarredHandler handler = new AdjustMyStarredHandler();
 					try {
 						handler.execute(new ExecutionEvent());
@@ -236,10 +262,10 @@ public class UIReviewTable {
 						e.printStackTrace();
 					}
 				}
-				//Right Click
+				// Right Click
 				if (aEvent.button == 3) {
 					// Process the Item table handling
-//					processItemSelection();
+					// processItemSelection();
 				}
 				break;
 			default:
@@ -249,7 +275,6 @@ public class UIReviewTable {
 
 	};
 
-	
 	/**
 	 * Key Listener to handle the Mouse down event on the ITEM and ANOMALY table
 	 */
@@ -264,7 +289,9 @@ public class UIReviewTable {
 			int val = selecteditems[0];
 			if (e.keyCode == SWT.ARROW_UP) {
 				// So we need to reduce the selected item
-				R4EGerritUi.Ftracer.traceInfo("keyEventListener() for ARROW_UP " + e.keyCode);
+				R4EGerritUi.Ftracer
+						.traceInfo("keyEventListener() for ARROW_UP "
+								+ e.keyCode);
 				if (val > 0) {
 					val--;
 					table.deselect(selecteditems[0]);
@@ -273,7 +300,9 @@ public class UIReviewTable {
 
 			if (e.keyCode == SWT.ARROW_DOWN) {
 				// So we need to increase the selected item
-				R4EGerritUi.Ftracer.traceInfo("keyEventListener() for ARROW_DOWN " + e.keyCode);
+				R4EGerritUi.Ftracer
+						.traceInfo("keyEventListener() for ARROW_DOWN "
+								+ e.keyCode);
 				if (val < table.getItemCount() - 1) {
 					val++;
 					table.deselect(selecteditems[0]);
@@ -283,11 +312,11 @@ public class UIReviewTable {
 			// Set the new selection
 			table.select(val);
 
-//			// Process the Item table handling
-//			processItemSelection();
-//
-//			// Open the file in the editor
-//			singleClickFocus(tableIndex);
+			// // Process the Item table handling
+			// processItemSelection();
+			//
+			// // Open the file in the editor
+			// singleClickFocus(tableIndex);
 
 		}
 	};
@@ -297,41 +326,47 @@ public class UIReviewTable {
 	 */
 	private void processItemSelection() {
 		ISelection tableSelection = fViewer.getSelection();
-		R4EGerritUi.Ftracer.traceInfo("Selected : " + tableSelection.getClass()); 
+		R4EGerritUi.Ftracer
+				.traceInfo("Selected : " + tableSelection.getClass());
 		if (tableSelection.isEmpty()) {
-			R4EGerritUi.Ftracer.traceInfo("Selected table selection is EMPTY " ); 
-			
+			R4EGerritUi.Ftracer.traceInfo("Selected table selection is EMPTY ");
+
 		} else {
-			if (tableSelection instanceof IStructuredSelection ) {
-				Object obj = ((IStructuredSelection) tableSelection).getFirstElement();
-				R4EGerritUi.Ftracer.traceInfo("Selected table selection class: " + obj.getClass() ); 
-				if (obj instanceof  R4EGerritReviewData) {
+			if (tableSelection instanceof IStructuredSelection) {
+				Object obj = ((IStructuredSelection) tableSelection)
+						.getFirstElement();
+				R4EGerritUi.Ftracer
+						.traceInfo("Selected table selection class: "
+								+ obj.getClass());
+				if (obj instanceof R4EGerritReviewData) {
 					R4EGerritReviewData item = (R4EGerritReviewData) obj;
-					R4EGerritUi.Ftracer.traceInfo("Selected table OBJECT selection ID: "  + item.getAttribute(R4EGerritReviewData.SHORT_CHANGE_ID) + 
-							"\t subject: " + item.getAttribute(R4EGerritReviewData.SUBJECT)); 				
-					
+					R4EGerritUi.Ftracer
+							.traceInfo("Selected table OBJECT selection ID: "
+									+ item.getAttribute(R4EGerritReviewData.SHORT_CHANGE_ID)
+									+ "\t subject: "
+									+ item.getAttribute(R4EGerritReviewData.SUBJECT));
+
 				}
 			}
 		}
-//		if (tableSelection.length == 1) {
-//			ReviewTableListItem selected = tableSelection[0];
-//		}
-//		if (R4EGerritTableView.getActiveView() != null) {
-//			ArrayList<IReviewEntityItem> itemlist = getSelectedItems();
-//			// Number of item to set the check flag
-//			if (itemlist.size() > 0) {
-//				// Only display the first one
-//				IReviewEntityItem item = itemlist.get(0);
-//				ReviewItemNavigatorViewPart.getInstance().displayInfo(item);
-//			} else {
-//				ReviewItemNavigatorAction.updateItemNavigatorIcon();
-//			}
-//		}
-//		// Set the review view toolbar
-//		ReviewItemNavigatorAction.updateItemNavigatorIcon();
-//
-//		ReviewTableCommonAction.setToolbarButtonsSensitivity();
+		// if (tableSelection.length == 1) {
+		// ReviewTableListItem selected = tableSelection[0];
+		// }
+		// if (R4EGerritTableView.getActiveView() != null) {
+		// ArrayList<IReviewEntityItem> itemlist = getSelectedItems();
+		// // Number of item to set the check flag
+		// if (itemlist.size() > 0) {
+		// // Only display the first one
+		// IReviewEntityItem item = itemlist.get(0);
+		// ReviewItemNavigatorViewPart.getInstance().displayInfo(item);
+		// } else {
+		// ReviewItemNavigatorAction.updateItemNavigatorIcon();
+		// }
+		// }
+		// // Set the review view toolbar
+		// ReviewItemNavigatorAction.updateItemNavigatorIcon();
+		//
+		// ReviewTableCommonAction.setToolbarButtonsSensitivity();
 	}
-
 
 }
