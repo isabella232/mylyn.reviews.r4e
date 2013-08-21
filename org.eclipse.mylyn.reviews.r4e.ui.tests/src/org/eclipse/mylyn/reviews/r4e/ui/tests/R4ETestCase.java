@@ -12,7 +12,6 @@
  * 
  * Contributors:
  *   Sebastien Dubois - Created for Mylyn Review R4E project
- *   
  ******************************************************************************/
 
 package org.eclipse.mylyn.reviews.r4e.ui.tests;

@@ -12,8 +12,8 @@
             id="org.eclipse.mylyn.reviews.r4e-gerrit.ui">
       </category>
       <view
-            name="R4E-Gerrit table"
-            icon="icons/view16/revnav_misc.gif"
+            name="Dashboard"
+            icon="icons/view16/gerrit.ico"
             category="org.eclipse.mylyn.reviews.r4e-gerrit.ui"
             class="org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView"
             id="org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView">
@@ -468,6 +468,9 @@
 	            commandId="org.eclipse.mylyn.reviews.r4e-gerrit.ui.adjustMyStarred">
 	      </handler>
 	      
+   </extension>
+   <extension
+         point="org.eclipse.mylyn.tasks.ui.editors">
    </extension>
 
 </plugin>

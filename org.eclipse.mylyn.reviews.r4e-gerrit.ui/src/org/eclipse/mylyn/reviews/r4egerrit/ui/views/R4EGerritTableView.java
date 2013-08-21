@@ -15,11 +15,17 @@
 
 package org.eclipse.mylyn.reviews.r4egerrit.ui.views;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
@@ -28,18 +34,22 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
-import org.eclipse.mylyn.internal.tasks.core.TaskTask;
+import org.eclipse.mylyn.internal.gerrit.core.GerritCorePlugin;
+import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
+import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
+import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
+import org.eclipse.mylyn.internal.tasks.core.TaskList;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
+import org.eclipse.mylyn.internal.tasks.ui.util.TasksUiInternal;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritQueryUtils;
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EQueryException;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.ReviewTableData;
@@ -48,9 +58,12 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGERRITUIConstan
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
+import org.eclipse.mylyn.tasks.core.IRepositoryModel;
 import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
+import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.ui.AbstractRepositoryConnectorUi;
+import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.mylyn.tasks.ui.TasksUiUtil;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorInput;
 import org.eclipse.swt.SWT;
@@ -64,6 +77,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
@@ -165,18 +179,14 @@ public class R4EGerritTableView extends ViewPart {
 		createSearchSection(aParent);
 		UIReviewTable reviewTable = new UIReviewTable();
 		fViewer = reviewTable.createTableViewerSection(aParent);
-		
 			
 		// Setup the view layout
 		createLayout(aParent);
-		
-		
-	
-		
-	
+
 		fViewer.setInput(fReviewItem.getReviews());
+		Table table = fViewer.getTable();
+		addListeners(table);
 		
-	
 //		fViewer.setInput(getViewSite());
 //
 //		// Create the help context id for the viewer's control
@@ -229,12 +239,12 @@ public class R4EGerritTableView extends ViewPart {
 		GridData gribDataViewer = new GridData(GridData.FILL_HORIZONTAL);
 		leftSearchForm.setLayoutData(gribDataViewer);
 
-		GridLayout leftLyoutForm = new GridLayout();
-		leftLyoutForm.numColumns = 2;
-		leftLyoutForm.marginHeight = 0;
-		leftLyoutForm.makeColumnsEqualWidth = false;
+		GridLayout leftLayoutForm = new GridLayout();
+		leftLayoutForm.numColumns = 2;
+		leftLayoutForm.marginHeight = 0;
+		leftLayoutForm.makeColumnsEqualWidth = false;
 		
-		leftSearchForm.setLayout(leftLyoutForm);
+		leftSearchForm.setLayout(leftLayoutForm);
 		
 		// Label for SEARCH for
 		fSearchForLabel = new Label(leftSearchForm, SWT.NONE);
@@ -322,33 +332,37 @@ public class R4EGerritTableView extends ViewPart {
 
 	private void makeActions() {
 		doubleClickAction = new Action() {
+			@Override
 			public void run() {
 
 			    // -------------------------------------------------
 				// Open an editor with the detailed task information
                 // -------------------------------------------------
 
-			    // Retrieve the table selection
-                ISelection selection = fViewer.getSelection();
-                Object obj = ((IStructuredSelection) selection).getFirstElement();
+			    // Retrieve the single table selection ("the" task)
+				ISelection selection = fViewer.getSelection();
+				if (!(selection instanceof IStructuredSelection)) {
+					return;
+				}
+				IStructuredSelection structuredSelection = (IStructuredSelection) selection;
+				if (structuredSelection.size() != 1) {
+					return;
+				}
+				Object element = structuredSelection.getFirstElement();
+				if (!(element instanceof AbstractTask)) {
+					return;
+				}
+				AbstractTask task = (AbstractTask) element;
 
-				// Get the task id from the table selection
-				R4EGerritReviewData summary = (R4EGerritReviewData) obj;
-                String mylynTaskId = summary.getAttribute(R4EGerritReviewData.TASK_ID);
-
-                // Fetch the detailed task information from the server
-		        AbstractRepositoryConnectorUi connector = TasksUiPlugin.getConnectorUi(GerritConnector.CONNECTOR_KIND);
-		        ITask task = new TaskTask(connector.getConnectorKind(), fTaskRepository.getRepositoryUrl(), mylynTaskId);
-
-		        // Select the proper editor...
-		        IEditorInput editorInput = connector.getTaskEditorInput(fTaskRepository, task);
+				// Open the task in the proper editor
+                AbstractRepositoryConnectorUi connectorUi = TasksUiPlugin.getConnectorUi(GerritConnector.CONNECTOR_KIND);
+		        IEditorInput editorInput = connectorUi.getTaskEditorInput(fTaskRepository, task);
 		        if (editorInput == null) {
 		            editorInput = new TaskEditorInput(fTaskRepository, task);
 		        }
-		        String editorId = connector.getTaskEditorId(task);
-
-		        // ... and open it with the task data
+		        String editorId = connectorUi.getTaskEditorId(task);
 				TasksUiUtil.openEditor(editorInput, editorId, null);
+
 			}
 		};
 	}
@@ -361,10 +375,10 @@ public class R4EGerritTableView extends ViewPart {
 		});
 	}
 
-	private void showMessage(String message) {
-		MessageDialog.openInformation(fViewer.getControl().getShell(),
-				"R4E-Gerrit table", message);
-	}
+//	private void showMessage(String message) {
+//		MessageDialog.openInformation(fViewer.getControl().getShell(),
+//				"R4E-Gerrit table", message);
+//	}
 
 	/**
 	 * Passing the focus request to the viewer's control.
@@ -467,7 +481,7 @@ public class R4EGerritTableView extends ViewPart {
 	 * Process the commands based on the Gerrit string 
 	 * @param String aQuery
 	 */
-	public void processCommands (String aQuery) {
+	public void processCommands(String aQuery) {
 		R4EGerritUi.Ftracer.traceInfo("Process command :   "  + aQuery );
 		String lastSaved = fServerUtil.getLastSavedGerritServer();
 		if (lastSaved != null) {
@@ -508,8 +522,7 @@ public class R4EGerritTableView extends ViewPart {
 
 	}
 	
-	private Object updateTable (final TaskRepository aTaskRepo, final String aQuery)  {
-		
+	private Object updateTable(final TaskRepository aTaskRepo, final String aQuery)  {
 		
 		final Job job = new Job(COMMAND_MESSAGE) {
 
@@ -530,10 +543,11 @@ public class R4EGerritTableView extends ViewPart {
 				// If there is only have one Gerrit server, we can proceed as if it was already used before
 				IStatus status = null;
 				try {
-	                R4EGerritReviewData[] list = R4EGerritQueryUtils.getReviewList(aTaskRepo, aQuery);
-	                final int numItems = list.length;
+	                R4EGerritTask[] reviewList = getReviewTasks(aTaskRepo, aQuery);
+//	                R4EGerritTask[] reviewList = R4EGerritQueryUtils.getReviewList(aTaskRepo, aQuery);
+	                final int numItems = reviewList.length;
 	                R4EGerritPlugin.Ftracer.traceInfo("Number of review items: " + numItems);
-	                fReviewItem.createReviewItem(list, aQuery, aTaskRepo );
+	                fReviewItem.createReviewItem(reviewList, aQuery, aTaskRepo );
 	                Display.getDefault().syncExec(new Runnable() {
 	                    @Override
 	                    public void run() {
@@ -542,12 +556,12 @@ public class R4EGerritTableView extends ViewPart {
 	                        setRepositoryLabel (aTaskRepo.getRepositoryLabel());
 	                        fViewer.setInput(fReviewItem.getReviews()); 
 	                        fViewer.refresh();
-	                        if (numItems < 1) {
-	                            //Display a popup, we did not find any items to display
-	                            String msg = "Query ( " + aQuery + ") on " + aTaskRepo.getUrl();
-	                            String reason = "Return " + numItems  + " items.";
-	                            UIUtils.showErrorDialog(msg, reason);
-	                        }
+//	                        if (numItems < 1) {
+//	                            //Display a popup, we did not find any items to display
+//	                            String msg = "Query ( " + aQuery + ") on " + aTaskRepo.getUrl();
+//	                            String reason = "Return " + numItems  + " items.";
+//	                            UIUtils.showErrorDialog(msg, reason);
+//	                        }
 	                    }
 	                });
 	                status = Status.OK_STATUS;
@@ -559,6 +573,7 @@ public class R4EGerritTableView extends ViewPart {
                 }
 
 				aMonitor.done();
+//				fetchMissingReviewInfo();
 				return status;
 			}
 		};
@@ -566,10 +581,67 @@ public class R4EGerritTableView extends ViewPart {
 		job.schedule();
 		
 		return null;
-		
-		
 	}
 
+    /**
+     * Perform the requested query and convert the resulting tasks in R4EGerritTask:s
+     * 
+     * @param repository the tasks repository
+     * @param queryType	the query
+     * 
+     * @return a list of R4EGerritTask:s
+     * @throws R4EQueryException
+     */
+    private R4EGerritTask[] getReviewTasks(TaskRepository repository, String queryType) throws R4EQueryException {
+
+    	// Format the query id
+    	String queryId = rtv.getTitle() + " - " + queryType;
+
+    	// Retrieve the query from the repository (if previously defined)
+    	Set<RepositoryQuery> queries = TasksUiInternal.getTaskList().getQueries();
+    	RepositoryQuery query = null;
+    	for (RepositoryQuery rquery : queries) {
+    		if (rquery.getRepositoryUrl().equals(repository.getRepositoryUrl()) && rquery.getSummary().equals(queryId)) {
+    			query = rquery;
+    			break;
+    		}
+    	}
+
+    	// If not found, create one and save it
+    	if (query == null) {
+        	IRepositoryModel repositoryModel = TasksUi.getRepositoryModel();
+        	query = (RepositoryQuery) repositoryModel.createRepositoryQuery(repository);
+        	query.setSummary(queryId);
+            query.setAttribute(GerritQuery.TYPE, queryType);
+    		query.setAttribute(GerritQuery.PROJECT, null);
+    		query.setAttribute(GerritQuery.QUERY_STRING, null);
+            TasksUiInternal.getTaskList().addQuery(query);
+    	}
+    	
+        // Execute the query and wait for the job completion
+        GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
+        try {
+            Job job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
+			job.join();
+		} catch (Exception e) {
+		}
+
+        // Convert the resulting tasks in R4EGerritTask:s
+        Collection<ITask> tasks = query.getChildren();
+        List<R4EGerritTask> reviews = new ArrayList<R4EGerritTask>();
+        for (ITask task : tasks) {
+        	try {
+				TaskData taskData = connector.getTaskData(repository, task.getTaskId(), new NullProgressMonitor());
+	            R4EGerritTask review = new R4EGerritTask(taskData);
+	            if (review.getAttribute(R4EGerritTask.DATE_COMPLETION) == null) {
+	                reviews.add(review);
+	            }
+			} catch (CoreException e) {
+			}
+        }
+        return reviews.toArray(new R4EGerritTask[0]);
+    }
+	
 //	/**
 //	 * Reset the data in the table.
 //	 * 
@@ -610,7 +682,196 @@ public class R4EGerritTableView extends ViewPart {
 			fRepositoryResulLabel.setText(aSt);
 		}
 	}
-	
-	
+
+	// ------------------------------------------------------------------------
+	// Review data updates
+    // ------------------------------------------------------------------------
+    // Background:
+	//
+	// The general query returns the list of reviews with some but not all the
+	// data required to fill a table entry - the remaining data is retrieved
+	// from the server using detailed review queries, one per review.
+	//
+	// Since there can be a large number of reviews to fetch, it can be very
+	// time consuming to retrieve ALL the detailed reviews. This is mitigated
+	// by retrieving the details of the visible reviews only.
+	//
+	// However, this requires a little bit of plumbing, namely:
+	//   - Identify the reviews to fetch (the visible ones)
+	//   - Format and send the corresponding detailed review requests
+	//   - Update the table as each request reply comes in
+    // ------------------------------------------------------------------------
+    
+    /**
+     * Add the listeners that trigger the review summary updates
+     * 
+     * @param table the table widget
+     */
+    private void addListeners(final Table table) {
+
+//        // Key scrolling
+//        table.addKeyListener(new KeyListener() {
+//            @Override
+//            public void keyReleased(KeyEvent e) {
+//                trace("keyReleased");
+////                fetchMissingReviewInfo();
+//            }
+//            @Override
+//            public void keyPressed(KeyEvent e) {
+//            }
+//        });
+
+//        // Mouse scrolling
+//        table.addMouseWheelListener(new MouseWheelListener() {
+//            @Override
+//            public void mouseScrolled(MouseEvent e) {
+//                trace("mouseScrolled");
+////                fetchMissingReviewInfo();
+//            }
+//        });
+
+//        // Scrollbar handling
+//        ScrollBar scrollbar = table.getVerticalBar();
+//        scrollbar.addSelectionListener(new SelectionListener() {
+//            @Override
+//            public void widgetSelected(SelectionEvent e) {
+//                trace("ScrollBar event");
+//                int top = table.getTopIndex();
+//                System.out.println("top=" + top + ", detail=" + e.detail);
+////                fetchMissingReviewInfo();
+////                table.setTopIndex(top);
+////                table.showItem(table.getItem(top + e.detail));
+//            }
+//            @Override
+//            public void widgetDefaultSelected(SelectionEvent e) {
+//            }
+//        });
+
+//        // Table resizing
+//        table.addControlListener(new ControlListener() {
+//            @Override
+//            public void controlResized(ControlEvent e) {
+//                trace("tableResized");
+////                fetchMissingReviewInfo();
+//            }
+//            @Override
+//            public void controlMoved(ControlEvent e) {
+//            }
+//        });
+
+    }
+
+//    /**
+//     * Fetch and display the detailed data of visible reviews
+//     */
+//    private void updateVisibleReviews() {
+//        List<String> reviewIds = getVisibleReviewIds();
+//        for (String id : reviewIds) {
+//            R4EGerritReviewData review = fReviewItem.getReview(id);
+//            if (review != null && !review.hasDetails()) {
+//                R4EGerritQueryUtils.getReviewDetails(fTaskRepository, review);
+//                refresh();  // Refresh every time? Arguable.
+//            }
+//        }
+//    }
+    
+//    /**
+//     * Fetch and display the detailed data of the missing (visible) reviews
+//     */
+//    private Job job = null;
+//    private void fetchMissingReviewInfo() {
+//
+//        trace("updateVisibleReviews");
+//
+//        if (job != null && job.getState() != Job.NONE && job.getThread() != null) {
+//            trace("Killing job #" + job.getThread().getId());
+//            job.cancel();
+//        }
+//
+//        final List<String> reviewIds = new ArrayList<String>();
+//        getVisibleReviewIds(reviewIds);
+//
+//        job = new Job("Fetch review data...") {
+//            @Override
+//            protected IStatus run(IProgressMonitor monitor) {
+//                trace("Starting job");
+//                for (String id : reviewIds) {
+//                    if (monitor.isCanceled()) {
+//                        trace("Canceling job");
+//                        break;
+//                    }
+//                    R4EGerritReviewData review = fReviewItem.getReview(id);
+//                    if (review != null && !review.hasDetails()) {
+//                        trace("Get review details for: " + id);
+//                        R4EGerritQueryUtils.getReviewDetails(fTaskRepository, review);
+//                        review.hasDetails(true);
+//                        refresh();  // More selective refresh?
+//                    }
+//                }
+//                trace("Completing job");
+//                return Status.OK_STATUS;
+//            }
+//        };
+//        
+//        trace("Scheduling job");
+//        job.schedule();
+//    }
+//
+//    
+//    /**
+//     * @return the list of review IDs that are currently visible
+//     */
+//    volatile Boolean semaphore = false;
+//    private void getVisibleReviewIds(final List<String> reviewIds) {
+//        trace("getVisibleReviewIds: enter");
+//        boolean mySemaphore = false;
+//        synchronized(semaphore) {
+//            if (!semaphore) {
+//                mySemaphore = semaphore = true;
+//            }
+//        }
+//        if (mySemaphore) {
+//            Display.getDefault().syncExec(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Table table = fViewer.getTable();
+//                    int tableHeight = table.getClientArea().height;
+//                    int headerHeight = table.getHeaderHeight();
+//                    int itemHeight = table.getItemHeight();
+//                    int nbReviewsVisible = (tableHeight - headerHeight) / itemHeight + 1;
+//
+//                    int topIndex = table.getTopIndex();
+//                    int nbReviewsTotal = table.getItemCount();
+//                    for (int i = 0; i < nbReviewsVisible; i++) {
+//                        int index = topIndex + i;
+//                        if (index < nbReviewsTotal) {
+//                            TableItem item = table.getItem(index);
+//                            if (item != null) {
+//                                reviewIds.add(item.getText(1));
+//                            }
+//                        }
+//                    }
+//                }
+//            });
+//            semaphore = false;
+//        }
+//        trace("getVisibleReviewIds: exit");
+//    }
+//
+//    /**
+//     * Refresh the table content with the new data
+//     */
+//    private void refresh() {
+//        Display.getDefault().syncExec(new Runnable() {
+//            @Override
+//            public void run() {
+//                fViewer.refresh();
+//            }
+//        });
+//    }
+    
+//    private void trace(String msg) {
+//        System.out.println("[" + System.currentTimeMillis() + "] " + "T=" + Thread.currentThread().getId() + " " + msg);
+//    }
 
 }

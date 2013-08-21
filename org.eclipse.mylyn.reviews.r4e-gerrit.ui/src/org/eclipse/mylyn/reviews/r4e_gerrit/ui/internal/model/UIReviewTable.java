@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.commands.table.AdjustMyStarredHandler;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
@@ -153,7 +153,6 @@ public class UIReviewTable {
 			GridData gribData = new GridData(GridData.FILL_BOTH);
 			gribData.minimumWidth = tableInfo[index].getWidth();
 			col.getColumn().getParent().setLayoutData(gribData);
-
 		}
 
 		TableLayout tableLayout = new TableLayout();
@@ -219,7 +218,8 @@ public class UIReviewTable {
 				SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();
 		column.setText(aTableInfo.getName());
-		column.setWidth(aTableInfo.getWidth());			
+		column.setWidth(aTableInfo.getWidth());
+		column.setAlignment(aTableInfo.getAlignment());
 		column.setResizable(aTableInfo.getResize());
 		column.setMoveable(aTableInfo.getMoveable());
 		return viewerColumn;
@@ -332,20 +332,13 @@ public class UIReviewTable {
 			R4EGerritUi.Ftracer.traceInfo("Selected table selection is EMPTY ");
 
 		} else {
-			if (tableSelection instanceof IStructuredSelection) {
-				Object obj = ((IStructuredSelection) tableSelection)
-						.getFirstElement();
-				R4EGerritUi.Ftracer
-						.traceInfo("Selected table selection class: "
-								+ obj.getClass());
-				if (obj instanceof R4EGerritReviewData) {
-					R4EGerritReviewData item = (R4EGerritReviewData) obj;
-					R4EGerritUi.Ftracer
-							.traceInfo("Selected table OBJECT selection ID: "
-									+ item.getAttribute(R4EGerritReviewData.SHORT_CHANGE_ID)
-									+ "\t subject: "
-									+ item.getAttribute(R4EGerritReviewData.SUBJECT));
-
+			if (tableSelection instanceof IStructuredSelection ) {
+				Object obj = ((IStructuredSelection) tableSelection).getFirstElement();
+				R4EGerritUi.Ftracer.traceInfo("Selected table selection class: " + obj.getClass() ); 
+				if (obj instanceof  R4EGerritTask) {
+					R4EGerritTask item = (R4EGerritTask) obj;
+					R4EGerritUi.Ftracer.traceInfo("Selected table OBJECT selection ID: "  + item.getAttribute(R4EGerritTask.SHORT_CHANGE_ID) + 
+							"\t subject: " + item.getAttribute(R4EGerritTask.SUBJECT)); 				
 				}
 			}
 		}

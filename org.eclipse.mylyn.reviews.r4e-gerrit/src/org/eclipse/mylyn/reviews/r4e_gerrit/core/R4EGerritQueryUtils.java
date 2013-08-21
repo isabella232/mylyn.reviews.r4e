@@ -15,7 +15,6 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
@@ -24,7 +23,6 @@ import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
 import org.eclipse.mylyn.tasks.core.IRepositoryQuery;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
-import org.eclipse.mylyn.tasks.core.data.TaskAttribute;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
 
 /**
@@ -48,7 +46,7 @@ public class R4EGerritQueryUtils {
      * @param query the query
      * @return the list of reviews matching the query
      */
-    public static R4EGerritReviewData[] getReviewList(TaskRepository repository, String queryType) throws R4EQueryException {
+    public static R4EGerritTask[] getReviewList(TaskRepository repository, String queryType) throws R4EQueryException {
 
         // Format the query
         IRepositoryQuery query = new RepositoryQuery(repository.getConnectorKind(), "query"); //$NON-NLS-1$
@@ -64,51 +62,32 @@ public class R4EGerritQueryUtils {
         }        
 
         // Extract the result
-        List<R4EGerritReviewData> reviews = new ArrayList<R4EGerritReviewData>();
+        List<R4EGerritTask> reviews = new ArrayList<R4EGerritTask>();
         List<TaskData> tasksData = resultCollector.getResults();
         for (TaskData taskData : tasksData) {
-            R4EGerritReviewData review = new R4EGerritReviewData(taskData);
-            if (review.getAttribute(R4EGerritReviewData.DATE_COMPLETION) == null) {
+            R4EGerritTask review = new R4EGerritTask(taskData);
+            if (review.getAttribute(R4EGerritTask.DATE_COMPLETION) == null) {
                 reviews.add(review);
             }
         }
-        return reviews.toArray(new R4EGerritReviewData[0]);
+        return reviews.toArray(new R4EGerritTask[0]);
     }
 
-    /**
-     * Updates the review data with detailed information from the repository
-     * 
-     * @param repository the repository
-     * @param reviewData the original (partial) review data
-     */
-    public static void getReviewDetails(TaskRepository repository, R4EGerritReviewData reviewData) {
-        GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
-        try {
-            TaskData taskData = connector.getTaskData(repository, reviewData.getAttribute(R4EGerritReviewData.TASK_ID), new NullProgressMonitor());
-            reviewData.setAttribute(R4EGerritReviewData.OWNER,   getValue(taskData.getRoot().getAttribute(R4EGerritReviewData.OWNER)));
-            reviewData.setAttribute(R4EGerritReviewData.PROJECT, getValue(taskData.getRoot().getAttribute(R4EGerritReviewData.PROJECT)));
-            reviewData.setAttribute(R4EGerritReviewData.BRANCH,  getValue(taskData.getRoot().getAttribute(R4EGerritReviewData.BRANCH)));
-        } catch (CoreException e) {
-            // TODO Log an error
-            e.printStackTrace();
-        }
-    }
-
-    /*
-     * Extract the first value from the specified task attributes list.
-     * 
-     * @param taskAttribute
-     * @return the first value in the list (if any)
-     */
-    private static String getValue(TaskAttribute taskAttribute) {
-        if (taskAttribute != null) {
-            List<String> values = taskAttribute.getValues();
-            if (values.size() > 0) {
-                return values.get(0);
-            }
-        }
-        return null;
-    }
+//    /*
+//     * Extract the first value from the specified task attributes list.
+//     * 
+//     * @param taskAttribute
+//     * @return the first value in the list (if any)
+//     */
+//    private static String getValue(TaskAttribute taskAttribute) {
+//        if (taskAttribute != null) {
+//            List<String> values = taskAttribute.getValues();
+//            if (values.size() > 0) {
+//                return values.get(0);
+//            }
+//        }
+//        return null;
+//    }
 
     //-------------------------------------------------------------------------
     // Attributes

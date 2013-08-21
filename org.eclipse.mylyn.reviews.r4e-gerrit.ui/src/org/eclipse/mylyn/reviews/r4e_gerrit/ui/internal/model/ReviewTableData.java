@@ -14,78 +14,103 @@
  ******************************************************************************/
 package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model;
 
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 
 /**
  * @author Jacques Bouthillier
  * @version $Revision: 1.0 $
- *
  */
 public class ReviewTableData {
 
-	// ------------------------------------------------------------------------
-	// Member variables
-	// ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // Member variables
+    // ------------------------------------------------------------------------
 
-	private R4EGerritReviewData[] fReviewList = null;
-	
-	private TaskRepository fTaskRepo = null;
-	
-	private String fQuery = null;
-	
-	
-	/**
-	 * Create a new review entry to insert to the list of reviews
-	 * 
-	 * @param Object
-	 */
-	public void createReviewItem(R4EGerritReviewData[] aList, String aQuery, TaskRepository aTaskRepo) {
+    // The list of reviews indexed by the SHORT_CHANGE_ID
+    private Map<String, R4EGerritTask> fReviewList;
 
-		// Create the new object
-//		if (fQuery != aQuery) {
-			fReviewList = aList;
-			fTaskRepo = aTaskRepo;
-			fQuery = aQuery;
-			
-//		} else {
-//			//Need to reset the list, we just created a null entry
-//			reset();
-//		}
-	}	
-	
-	/**
-	 * Provide the list of review available for the table list
-	 * @return ReviewTableListItem[]
-	 */
-	public R4EGerritReviewData[] getReviews () {
-		if (fReviewList == null) {
-	        fReviewList = new R4EGerritReviewData[0];
-		}
-		return fReviewList;
-	}
-	
-	/**
-	 * Get the current TaskRepo populating the table list view
-	 * @return TaskRepository
-	 */
-    public TaskRepository getCurrentTaskRepo () {
-    	return  fTaskRepo; 
+    private TaskRepository                   fTaskRepo = null;
+
+    private String                           fQuery    = null;
+
+    /**
+     * Create a new review entry to insert to the list of reviews
+     * 
+     * @param Object
+     */
+    @SuppressWarnings("restriction")
+	public void createReviewItem(R4EGerritTask[] aList, String aQuery,
+            TaskRepository aTaskRepo) {
+
+        // Create the new object
+        // if (fQuery != aQuery) {
+        fReviewList = new HashMap<String, R4EGerritTask>();
+        for (R4EGerritTask review : aList) {
+            fReviewList.put(
+                    review.getAttribute(R4EGerritTask.SHORT_CHANGE_ID),
+                    review);
+        }
+        fTaskRepo = aTaskRepo;
+        fQuery = aQuery;
+
+        // } else {
+        // //Need to reset the list, we just created a null entry
+        // reset();
+        // }
     }
-    
+
+    /**
+     * Provide the list of review available for the table list
+     * 
+     * @return the list of gerrit reviews
+     */
+    public R4EGerritTask[] getReviews() {
+        if (fReviewList == null) {
+            fReviewList = new HashMap<String, R4EGerritTask>();
+        }
+        return fReviewList.values().toArray(new R4EGerritTask[0]);
+    }
+
+    /**
+     * Provide the review with the specified ID
+     * 
+     * @param id
+     *            the requested ID (SHORT_CHANGE_ID)
+     * @return the requested review (or null)
+     */
+    public R4EGerritTask getReview(String id) {
+        if (id != null && fReviewList.containsKey(id)) {
+            return fReviewList.get(id);
+        }
+        return null;
+    }
+
+    /**
+     * Get the current TaskRepo populating the table list view
+     * 
+     * @return TaskRepository
+     */
+    public TaskRepository getCurrentTaskRepo() {
+        return fTaskRepo;
+    }
+
     /**
      * Return the query information used to populate the review table
+     * 
      * @return String
      */
-    public String getQueryInfo () {
-    	return fQuery;
+    public String getQueryInfo() {
+        return fQuery;
     }
 
-    	
-	private void reset() {
-		if (fReviewList != null) {
-            fReviewList = new R4EGerritReviewData[0];
-		}
-	}
+//    private void reset() {
+//        if (fReviewList != null) {
+//            fReviewList = new HashMap<String, R4EGerritReviewData>();
+//        }
+//    }
 
 }

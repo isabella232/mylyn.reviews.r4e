@@ -17,6 +17,8 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model;
 
 import java.util.ArrayList;
 
+import org.eclipse.swt.SWT;
+
 /**
  * @author Jacques Bouthillier
  * @version $Revision: 1.0 $
@@ -29,28 +31,29 @@ import java.util.ArrayList;
 // Moveable}
 public enum ReviewTableDefinition {
 	// 			Name 			Width 	Resize Moveable
-	   STARRED(	"", 			20, 	false,	true), 
-	   ID(		"ID", 			80, 	false,	true), 
-	   SUBJECT(	"Subject",	 	200, 	true,	true), 
-	   OWNER(	"Owner", 		140, 	true, 	true), 
-	   PROJECT(	"Project", 		200, 	true, 	true), 
-	   BRANCH(	"Branch", 		100, 	true, 	true), 
-	   UPDATED(	"Updated", 		75, 	true, 	true), 
-	   CR(		"CR", 			28, 	false, 	true), 
-	   IC(		"IC", 			28, 	false, 	true), 
-	   VERIFY(	"V", 			28,		false, 	true);
+	   STARRED(	"", 			20, 	false,	true, SWT.LEFT), 
+	   ID(		"ID", 			80, 	false,	true, SWT.LEFT),
+	   SUBJECT(	"Subject",	 	200, 	true,	true, SWT.LEFT),
+	   OWNER(	"Owner", 		140, 	true, 	true, SWT.LEFT),
+	   PROJECT(	"Project", 		200, 	true, 	true, SWT.LEFT),
+	   BRANCH(	"Branch", 		100, 	true, 	true, SWT.LEFT),
+	   UPDATED(	"Updated", 		100, 	true, 	true, SWT.RIGHT),
+	   CR(		"CR", 			28, 	false, 	true, SWT.LEFT),
+//	   IC(		"IC", 			28, 	false, 	true, SWT.LEFT),
+	   VERIFY(	"V", 			28,		false, 	true, SWT.LEFT);
 	   
-	private String fHeader;
-	private int fwidth;
-	private Boolean fResize;
-	private Boolean fMoveable;
+	private final String  fHeader;
+	private final int     fwidth;
+	private final boolean fResize;
+	private final boolean fMoveable;
+	private final int     fAlignment;
 
-	private ReviewTableDefinition(String aName, int aWidth, Boolean aResize,
-			Boolean aMove) {
+	private ReviewTableDefinition(String aName, int aWidth, boolean aResize, boolean aMove, int align) {
 		fHeader = aName;
 		fwidth = aWidth;
 		fResize = aResize;
 		fMoveable = aMove;
+		fAlignment = align;
 	}
 
 	public String getName() {
@@ -61,12 +64,16 @@ public enum ReviewTableDefinition {
 		return fwidth;
 	}
 
-	public Boolean getResize() {
+	public boolean getResize() {
 		return fResize;
 	}
 
-	public Boolean getMoveable() {
+	public boolean getMoveable() {
 		return fMoveable;
+	}
+
+	public int getAlignment() {
+		return fAlignment;
 	}
 
 	public static String[] getColumnName() {

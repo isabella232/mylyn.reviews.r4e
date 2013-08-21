@@ -19,7 +19,7 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritReviewData;
+import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -37,12 +37,20 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	// ------------------------------------------------------------------------
 	// Constants
 	// ------------------------------------------------------------------------
-	private final String EMPTY_STRING = "";
-	// Names of images used to represent review-checked
+	
+    private final String EMPTY_STRING = "";
+
+	// +2 Names of images used to represent review-checked
 	public static final String CHECKED_IMAGE = "greenCheck";
 
-	// Names of images used to represent review-not OK
+	// -2 Names of images used to represent review-not OK
 	public static final String NOT_OK_IMAGE = "redNot";
+
+	// -1
+	public static final String MINUS_ONE = "minusOne";
+
+	// +1
+	public static final String PLUS_ONE = "plusOne";
 
 	// Names of images used to represent STAR FILLED
 	public static final String STAR_FILLED = "starFilled";
@@ -61,8 +69,10 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	//Color used depending on the review state
 	private static Color DEFAULT_COLOR = fDisplay.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
 //	private static Color INCOMING_COLOR = fDisplay.getSystemColor(SWT.COLOR_TITLE_BACKGROUND);
-	private static Color INCOMING_COLOR = fDisplay.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW);
-	private static Color CLOSED_COLOR = fDisplay.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+	private static Color INCOMING_COLOR = fDisplay.getSystemColor(SWT.COLOR_WHITE);
+	private static Color CLOSED_COLOR = fDisplay.getSystemColor(SWT.COLOR_WHITE);
+//	private static Color INCOMING_COLOR = fDisplay.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW);
+//	private static Color CLOSED_COLOR = fDisplay.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
 
 	// For the images
 	private static ImageRegistry fImageRegistry = new ImageRegistry();
@@ -72,21 +82,23 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	 * and automatically disposes of them the SWT Display is disposed.
 	 */
 	static {
+		
 		String iconPath = "icons/view16/";
-		// icon used for the column ID
 
-		fImageRegistry.put(
-				CHECKED_IMAGE,
-				R4EGerritUi.getImageDescriptor(iconPath + CHECKED_IMAGE
-						+ ".png"));
-		fImageRegistry.put(NOT_OK_IMAGE, R4EGerritUi
-				.getImageDescriptor(iconPath + NOT_OK_IMAGE + ".png"));
+		fImageRegistry.put(CHECKED_IMAGE,
+				R4EGerritUi.getImageDescriptor(iconPath + CHECKED_IMAGE + ".png"));
 
-		// icon used for the column ID
-		fImageRegistry
-				.put(STAR_FILLED,
-						R4EGerritUi.getImageDescriptor(iconPath + STAR_FILLED
-								+ ".gif"));
+		fImageRegistry.put(NOT_OK_IMAGE,
+				R4EGerritUi.getImageDescriptor(iconPath + NOT_OK_IMAGE + ".png"));
+
+		fImageRegistry.put(MINUS_ONE,
+				R4EGerritUi.getImageDescriptor(iconPath + MINUS_ONE + ".png"));
+
+		fImageRegistry.put(PLUS_ONE,
+				R4EGerritUi.getImageDescriptor(iconPath + PLUS_ONE + ".png"));
+
+		fImageRegistry.put(STAR_FILLED,
+				R4EGerritUi.getImageDescriptor(iconPath + STAR_FILLED + ".gif"));
 
 		fImageRegistry.put(STAR_OPEN,
 				R4EGerritUi.getImageDescriptor(iconPath + STAR_OPEN + ".gif"));
@@ -101,17 +113,47 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	// ------------------------------------------------------------------------
 	// Methods
 	// ------------------------------------------------------------------------
+
 	/**
 	 * Return an image representing the state of the object
 	 * 
 	 * @param int aState
 	 * @return Image
 	 */
-	private Image getReviewSate(int aState) {
-		if (aState == NOT_OK_IMAGE_STATE) {
-			return fImageRegistry.get(NOT_OK_IMAGE);
-		} else if (aState == CHECKED_IMAGE_STATE) {
+	private Image getReviewStateImage(int aState) {
+		switch (aState) {
+		case 2:
 			return fImageRegistry.get(CHECKED_IMAGE);
+		case 1:
+			return fImageRegistry.get(PLUS_ONE);
+		case 0:
+			break;
+		case -1:
+			return fImageRegistry.get(MINUS_ONE);
+		case -2:
+			return fImageRegistry.get(NOT_OK_IMAGE);
+		default:
+			break;
+		}
+		return null;
+	}
+
+	/**
+	 * Return an image representing the state of the object
+	 * 
+	 * @param int aState
+	 * @return Image
+	 */
+	private Image getVerifyStateImage(int aState) {
+		switch (aState) {
+		case 1:
+			return fImageRegistry.get(CHECKED_IMAGE);
+		case 0:
+			break;
+		case -1:
+			return fImageRegistry.get(NOT_OK_IMAGE);
+		default:
+			break;
 		}
 		return null;
 	}
@@ -142,67 +184,67 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	 * 
 	 * @return String text associated to the column
 	 */
+	@SuppressWarnings("restriction")
 	public String getColumnText(Object aObj, int aIndex) {
 		// R4EGerritPlugin.Ftracer.traceWarning("getColumnText object: " + aObj
 		// + "\tcolumn: " + aIndex);
-		if (aObj instanceof R4EGerritReviewData) {
-			R4EGerritReviewData reviewSummary = (R4EGerritReviewData) aObj;
-			String value = null;
+		if (aObj instanceof R4EGerritTask) {
+			R4EGerritTask reviewSummary = (R4EGerritTask) aObj;
+//			String value = null;
 			switch (aIndex) {
 			case 0:
-				return reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_STAR); // Needed for the sorter
+				return reviewSummary.getAttribute(R4EGerritTask.IS_STARRED); // Needed for the sorter
 			case 1:
-				return reviewSummary.getAttribute(R4EGerritReviewData.SHORT_CHANGE_ID); 
+				return reviewSummary.getAttribute(R4EGerritTask.SHORT_CHANGE_ID); 
 			case 2:
-				return reviewSummary.getAttribute(R4EGerritReviewData.SUBJECT); 
+				return reviewSummary.getAttribute(R4EGerritTask.SUBJECT); 
 			case 3:
-				return reviewSummary.getAttribute(R4EGerritReviewData.OWNER); 
+				return reviewSummary.getAttribute(R4EGerritTask.OWNER); 
 			case 4:
-				return reviewSummary.getAttribute(R4EGerritReviewData.PROJECT); 
+				return reviewSummary.getAttribute(R4EGerritTask.PROJECT); 
 			case 5:
-				return reviewSummary.getAttribute(R4EGerritReviewData.BRANCH); 
+				return reviewSummary.getAttribute(R4EGerritTask.BRANCH); 
 			case 6:
-				return reviewSummary.getAttributeAsDate(R4EGerritReviewData.DATE_MODIFICATION); 
-			case 7:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CR);
-				if (null != value && !value.equals(EMPTY_STRING)) {
-					return formatValue (value);
-				}
-				break; 
-			case 8:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CI);
-				if (null != value && !value.equals(EMPTY_STRING)) {
-					return formatValue (value);
-				}
-				break; 
-			case 9:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_V);
-				if (null != value && !value.equals(EMPTY_STRING)) {
-					return formatValue (value);
-				}
-				break; 
+				return reviewSummary.getAttributeAsDate(R4EGerritTask.DATE_MODIFICATION); 
+//			case 7:
+//				value = reviewSummary.getAttribute(R4EGerritTask.REVIEW_STATE);
+//				if (null != value && !value.equals(EMPTY_STRING)) {
+//					return formatValue (value);
+//				}
+//			case 8:
+//				value = reviewSummary.getAttribute(R4EGerritTask.IS_IPCLEAN);
+//				if (null != value && !value.equals(EMPTY_STRING)) {
+//					return formatValue (value);
+//				}
+//                return EMPTY_STRING; 
+//			case 9:
+//				value = reviewSummary.getAttribute(R4EGerritTask.VERIFY_STATE);
+//				if (null != value && !value.equals(EMPTY_STRING)) {
+//					return formatValue (value);
+//				}
+//                return EMPTY_STRING; 
 			default:
 				return EMPTY_STRING;
 			}
 		}
-		return "";
+		return EMPTY_STRING;
 	}
 
 	
-	/**
-	 * Format the numbering value to display
-	 * @param aSt
-	 * @return String
-	 */
-	private String formatValue (String aSt) {
-		int val = aSt.equals("")? 0 : Integer.parseInt(aSt, 10);
-		if ( val > 0) {
-			String st = "+" + aSt;
-			return st;
-		}
-		return aSt; 
-
-	}
+//	/**
+//	 * Format the numbering value to display
+//	 * @param aSt
+//	 * @return String
+//	 */
+//	private String formatValue (String aSt) {
+//		int val = aSt.equals("")? 0 : Integer.parseInt(aSt, 10);
+//		if ( val > 0) {
+//			String st = "+" + aSt;
+//			return st;
+//		}
+//		return aSt; 
+//
+//	}
 
 	/**
 	 * Return the image associated to the column
@@ -213,16 +255,17 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	 * 
 	 * @return Image Image according to the selected column
 	 */
+	@SuppressWarnings("restriction")
 	public Image getColumnImage(Object aObj, int aIndex) {
 		// R4EGerritPlugin.Ftracer
 		// .traceWarning("getColumnImage column: " + aIndex);
 		Image image = null;
 		String value = null;
-		if (aObj instanceof R4EGerritReviewData) {
-			R4EGerritReviewData reviewSummary = (R4EGerritReviewData) aObj;
+		if (aObj instanceof R4EGerritTask) {
+			R4EGerritTask reviewSummary = (R4EGerritTask) aObj;
 			switch (aIndex) {
 			case 0:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_STAR);
+				value = reviewSummary.getAttribute(R4EGerritTask.IS_STARRED);
 				if (null != value && !value.equals(EMPTY_STRING)) {
 					return getReviewId(Boolean.valueOf(value.toLowerCase()));
 				}
@@ -240,27 +283,27 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 			case 6:
 				return image;
 			case 7:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CR);
+				value = reviewSummary.getAttribute(R4EGerritTask.REVIEW_STATE);
 
 				if (null != value && !value.equals(EMPTY_STRING)) {
 					int val = Integer.parseInt(value);
-					return getReviewSate(val);
+					return getReviewStateImage(val);
 				}
 				break;
 			case 8:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CI);
+//				value = reviewSummary.getAttribute(R4EGerritTask.IS_IPCLEAN);
+//
+//				if (null != value && !value.equals(EMPTY_STRING)) {
+//					int val = Integer.parseInt(value);
+//					return getReviewSate(val);
+//				}
+//				break;
+//			case 9:
+				value = reviewSummary.getAttribute(R4EGerritTask.VERIFY_STATE);
 
 				if (null != value && !value.equals(EMPTY_STRING)) {
 					int val = Integer.parseInt(value);
-					return getReviewSate(val);
-				}
-				break;
-			case 9:
-				value = reviewSummary.getAttribute(R4EGerritReviewData.REVIEW_FLAG_V);
-
-				if (null != value && !value.equals(EMPTY_STRING)) {
-					int val = Integer.parseInt(value);
-					return getReviewSate(val);
+					return getVerifyStateImage(val);
 				}
 				break;
 			default:
@@ -280,36 +323,36 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	 */
 	@Override
 	public Color getForeground(Object aElement, int aColumnIndex) {
-		if (aElement instanceof R4EGerritReviewData) {
-			R4EGerritReviewData item = (R4EGerritReviewData) aElement;
+		if (aElement instanceof R4EGerritTask) {
+			R4EGerritTask item = (R4EGerritTask) aElement;
 			int value = 0;
 			String st = null;
 			// R4EGerritPlugin.Ftracer.traceWarning("getForeground() object CR : "
 			// + item.getCr() + "\tcolumn : " + aColumnIndex );
 			if (aColumnIndex == ReviewTableDefinition.CR.ordinal()
-					|| aColumnIndex == ReviewTableDefinition.IC.ordinal()
+//					|| aColumnIndex == ReviewTableDefinition.IC.ordinal()
 					|| aColumnIndex == ReviewTableDefinition.VERIFY.ordinal()) {
 				switch (aColumnIndex) {
 				case 7: // ReviewTableDefinition.CR.ordinal():
-					st = item.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CR);
-					if (st != null) {
-						value = st.equals(EMPTY_STRING) ? 0 : Integer
-								.parseInt(st);						
-					}
+//					st = item.getAttribute(R4EGerritTask.REVIEW_STATE);
+//					if (st != null) {
+//						value = st.equals(EMPTY_STRING) ? 0 : Integer
+//								.parseInt(st);						
+//					}
 					break;
 				case 8: // ReviewTableDefinition.IC.ordinal():
-					st = item.getAttribute(R4EGerritReviewData.REVIEW_FLAG_CI);
-					if (st != null) {
-						value = st.equals(EMPTY_STRING) ? 0 : Integer
-								.parseInt(st);						
-					}
-					break;
-				case 9: // ReviewTableDefinition.VERIFY.ordinal():
-					st = item.getAttribute(R4EGerritReviewData.REVIEW_FLAG_V);
-					if (st != null) {
-						value = st.equals(EMPTY_STRING) ? 0 : Integer
-								.parseInt(st);						
-					}
+//					st = item.getAttribute(R4EGerritTask.IS_IPCLEAN);
+//					if (st != null) {
+//						value = st.equals(EMPTY_STRING) ? 0 : Integer
+//								.parseInt(st);						
+//					}
+//					break;
+//				case 9: // ReviewTableDefinition.VERIFY.ordinal():
+//					st = item.getAttribute(R4EGerritTask.VERIFY_STATE);
+//					if (st != null) {
+//						value = st.equals(EMPTY_STRING) ? 0 : Integer
+//								.parseInt(st);						
+//					}
 					break;
 				}
 				if (value < 0) {
@@ -323,16 +366,17 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	}
 
 	@Override
+	@SuppressWarnings("restriction")
 	public Color getBackground(Object aElement, int aColumnIndex) {
 		// R4EGerritUi.Ftracer.traceInfo("getBackground column : " +
 		// aColumnIndex +
 		// " ]: "+ aElement );
-		if (aElement instanceof R4EGerritReviewData) {
-			R4EGerritReviewData item = (R4EGerritReviewData) aElement;
+		if (aElement instanceof R4EGerritTask) {
+			R4EGerritTask item = (R4EGerritTask) aElement;
 			//
 			// To modify when we can verify the review state
 			String state = item
-					.getAttribute(R4EGerritReviewData.REVIEW_FLAG_STAR);
+					.getAttribute(R4EGerritTask.IS_STARRED);
 			if (state != null) {
 				if (state.equals("true")) {
 					return INCOMING_COLOR;
