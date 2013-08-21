@@ -16,6 +16,7 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
@@ -33,9 +34,9 @@ public class ReviewTableData {
     // The list of reviews indexed by the SHORT_CHANGE_ID
     private Map<String, R4EGerritTask> fReviewList;
 
-    private TaskRepository                   fTaskRepo = null;
+    private TaskRepository fTaskRepo = null;
 
-    private String                           fQuery    = null;
+    private String fQuery    = null;
 
     /**
      * Create a new review entry to insert to the list of reviews
@@ -48,7 +49,7 @@ public class ReviewTableData {
 
         // Create the new object
         // if (fQuery != aQuery) {
-        fReviewList = new HashMap<String, R4EGerritTask>();
+        fReviewList = new ConcurrentHashMap<String, R4EGerritTask>();
         for (R4EGerritTask review : aList) {
             fReviewList.put(
                     review.getAttribute(R4EGerritTask.SHORT_CHANGE_ID),
@@ -63,6 +64,21 @@ public class ReviewTableData {
         // }
     }
 
+	public void createReviewItem(String query, TaskRepository repository) {
+        fReviewList = new HashMap<String, R4EGerritTask>();
+        fTaskRepo = repository;
+        fQuery = query;
+    }
+
+    @SuppressWarnings("restriction")
+	public void updateReviewItem(R4EGerritTask task) {
+        fReviewList.put(task.getTaskId(), task);
+    }
+    
+	public void deleteReviewItem(String taskId) {
+        fReviewList.remove(taskId);
+    }
+    
     /**
      * Provide the list of review available for the table list
      * 
@@ -106,6 +122,14 @@ public class ReviewTableData {
     public String getQueryInfo() {
         return fQuery;
     }
+
+	@SuppressWarnings("restriction")
+	public void init(R4EGerritTask[] reviews) {
+		for (R4EGerritTask review : reviews) {
+	        fReviewList.put(review.getTaskId(), review);
+
+		}
+	}
 
 //    private void reset() {
 //        if (fReviewList != null) {
