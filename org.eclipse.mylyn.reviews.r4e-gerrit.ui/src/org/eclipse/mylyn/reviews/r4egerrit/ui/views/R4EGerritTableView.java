@@ -12,6 +12,7 @@
  * Contributors:
  *   Jacques Bouthillier - Initial Implementation of the plug-in
  *   Francois Chouinard - Handle gerrit queries and open reviews in editor
+ *   Guy Perron			- Add review counter, Add Gerrit button selection
  ******************************************************************************/
 
 package org.eclipse.mylyn.reviews.r4egerrit.ui.views;
@@ -42,6 +43,8 @@ import org.eclipse.mylyn.commons.workbench.DelayedRefreshJob;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
 import org.eclipse.mylyn.internal.gerrit.core.GerritCorePlugin;
 import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
+import org.eclipse.mylyn.internal.gerrit.core.client.GerritClient;
+import org.eclipse.mylyn.internal.gerrit.core.client.GerritException;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.ITaskListChangeListener;
 import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
@@ -62,7 +65,6 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
 import org.eclipse.mylyn.tasks.core.IRepositoryElement;
 import org.eclipse.mylyn.tasks.core.IRepositoryModel;
-import org.eclipse.mylyn.tasks.core.IRepositoryQuery;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.ui.AbstractRepositoryConnectorUi;
@@ -70,6 +72,7 @@ import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.mylyn.tasks.ui.TasksUiUtil;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorInput;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -124,11 +127,15 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	private static final String COMMAND_MESSAGE = "Search Gerrit info ...";
 
 	// Labels for the Search 
-	private final String SEARCH_LABEL = "Current Query:";
-	private final String SEARCH_BTN = "Search";
-	private final String REPOSITORY = "Repository:";
+	private final String SEARCH_LABEL 	= "Current Query:";
+	private final String SEARCH_BTN 	= "Search";
+	private final String REPOSITORY 	= "Repository:";
+	private final String VERSION 		= "Version:";
+	private final String TOTAL_COUNT 	= "Total reviews:";
 
-	private final int SEARCH_WIDTH = 150;
+	private final int SEARCH_WIDTH = 300;
+	private final int REPO_WIDTH = 200;
+	private final int VERSION_WIDTH = 70;
 	
 	// ------------------------------------------------------------------------
 	// Member variables
@@ -147,6 +154,12 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	private Label 	fRepositoryLabel;
 	private Label	fRepositoryResulLabel;
 
+    private Label 	fRepositoryVersionLabel;
+	private Label	fRepositoryVersionResulLabel;
+	
+    private Label 	fReviewsTotalLabel;	
+    private Label 	fReviewsTotalResultLabel;	
+	
 	private Text	fSearchRequestText;
 	private Button	fSearchRequestBtn;
 	
@@ -178,6 +191,8 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	            @Override
 	            public void run() {
 	            	fViewer.setInput(fReviewTable.getReviews()); 
+	            	//Refresh the counter
+                    setReviewsTotalResultLabel(Integer.toString(fReviewTable.getReviews().length));
 	            	fViewer.refresh(false, false);
 	            }
 	        });
@@ -217,13 +232,18 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	public void createPartControl(Composite aParent) {
+		ScrolledComposite sc = new ScrolledComposite(aParent,  SWT.H_SCROLL| SWT.V_SCROLL | SWT.BORDER);
+		sc.setExpandHorizontal(true);
+		Composite c = new Composite(sc, SWT.NONE);
+		sc.setContent(c);
+    	sc.setExpandVertical(true);
 
-		createSearchSection(aParent);
+		createSearchSection(c);
 		UIReviewTable reviewTable = new UIReviewTable();
-		fViewer = reviewTable.createTableViewerSection(aParent);
+		fViewer = reviewTable.createTableViewerSection(c);
 			
 		// Setup the view layout
-		createLayout(aParent);
+		createLayout(c);
 
 		makeActions();
 		hookContextMenu();
@@ -235,6 +255,8 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 		// Listen on query results
 		TasksUiPlugin.getTaskList().addChangeListener(this);
+		
+		sc.setMinSize(c.computeSize(SWT.DEFAULT, SWT.DEFAULT));		
 	}
 
 	private void createLayout(Composite aParent) {
@@ -275,11 +297,27 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		leftSearchForm.setLayoutData(gribDataViewer);
 
 		GridLayout leftLayoutForm = new GridLayout();
-		leftLayoutForm.numColumns = 2;
+		leftLayoutForm.numColumns = 4;
 		leftLayoutForm.marginHeight = 0;
 		leftLayoutForm.makeColumnsEqualWidth = false;
+		leftLayoutForm.horizontalSpacing = 10;
 		
 		leftSearchForm.setLayout(leftLayoutForm);
+		
+		//Label to display the repository
+		fRepositoryLabel = new Label(leftSearchForm, SWT.NONE);
+		fRepositoryLabel.setText(REPOSITORY);
+		
+		fRepositoryResulLabel = new Label(leftSearchForm, SWT.NONE);
+		fRepositoryResulLabel.setLayoutData(new GridData(REPO_WIDTH, SWT.DEFAULT));
+
+		//Label to display the repository version
+		fRepositoryVersionLabel = new Label(leftSearchForm, SWT.NONE);
+		fRepositoryVersionLabel.setText(VERSION);
+		
+		fRepositoryVersionResulLabel = new Label(leftSearchForm, SWT.NONE);
+		fRepositoryVersionResulLabel.setLayoutData(new GridData(VERSION_WIDTH, SWT.DEFAULT));	
+		
 		
 		// Label for SEARCH for
 		fSearchForLabel = new Label(leftSearchForm, SWT.NONE);
@@ -287,14 +325,14 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		
 		// Label for the SEARH request
 		fSearchResulLabel = new Label(leftSearchForm, SWT.NONE);
-		fSearchResulLabel.setLayoutData(new GridData(SEARCH_WIDTH, SWT.DEFAULT));
+		fSearchResulLabel.setLayoutData(new GridData(REPO_WIDTH, SWT.DEFAULT));
 
-		//Label to display the repository
-		fRepositoryLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryLabel.setText(REPOSITORY);
+		//Label to display Total reviews
+		fReviewsTotalLabel = new Label(leftSearchForm, SWT.NONE);
+		fReviewsTotalLabel.setText(TOTAL_COUNT);
 		
-		fRepositoryResulLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryResulLabel.setLayoutData(new GridData(SEARCH_WIDTH, SWT.DEFAULT));
+		fReviewsTotalResultLabel = new Label(leftSearchForm, SWT.NONE);
+		fReviewsTotalResultLabel.setLayoutData(new GridData(VERSION_WIDTH, SWT.DEFAULT));		
 
 		
 		//Right side of the Group
@@ -529,15 +567,10 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		
 		//We should have a TaskRepository here, otherwise, the user need to define one
 		if (fTaskRepository == null) {
-//			try {
 			String msg = "You need to define a Gerrit repository.";
 			String reason = "No Gerrit repository has been selected yet.";
-				R4EGerritUi.Ftracer.traceInfo(msg );
-				UIUtils.showErrorDialog(msg, reason);
-//			} catch (NotDefinedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			R4EGerritUi.Ftracer.traceInfo(msg );
+			UIUtils.showErrorDialog(msg, reason);
 		} else {
 			updateTable (fTaskRepository, aQuery);
 		}
@@ -580,6 +613,14 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		                        setSearchText(aQueryType);	                        	
 	                        }
 	                        setRepositoryLabel(aTaskRepo.getRepositoryLabel());
+	                        GerritClient gerritClient = fConnector.getClient(aTaskRepo);
+	                        try {
+								R4EGerritUi.Ftracer.traceInfo("Jb GerritClient: " + gerritClient.getVersion(new NullProgressMonitor()) );
+								setRepositoryVersionLabel (gerritClient.getVersion(new NullProgressMonitor()).toString() );
+							} catch (GerritException e1) {
+								e1.printStackTrace();
+							}
+	                        
 	                    }
 	                });
 	                status = Status.OK_STATUS;
@@ -785,6 +826,19 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		        }
 			} catch (CoreException e) {
 			}
+		}
+		
+	}
+
+	private void setRepositoryVersionLabel(String aSt) {
+		if (!fRepositoryVersionResulLabel.isDisposed() ) {
+			fRepositoryVersionResulLabel.setText(aSt);
+		}
+	}
+
+	private void setReviewsTotalResultLabel(String aSt) {
+		if (!fReviewsTotalResultLabel.isDisposed() ) {
+			fReviewsTotalResultLabel.setText(aSt);
 		}
 	}
 

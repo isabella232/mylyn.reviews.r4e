@@ -64,6 +64,18 @@
       <menuContribution
             locationURI="toolbar:org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView?after=additions">
           <command
+                commandId="org.eclipse.mylyn.reviews.r4e-gerrit.selectCurrentGerrit"
+                icon="icons/favicon.ico"
+                id="r4eGerrit.dropdown.toolbar.initiateGerrit"
+                label="R4E-Gerrit"
+                style="pulldown">
+          </command>            
+	<!--          <separator
+                name="addition0"
+                visible="true">
+            </separator>
+            -->
+          <command
                 commandId="org.eclipse.mylyn.reviews.r4e-gerrit.ui.allOpenReviews"
                 id="r4eGerritUI.dropdown.toolbar.AddAllOpenReviews"
                 label="All"
