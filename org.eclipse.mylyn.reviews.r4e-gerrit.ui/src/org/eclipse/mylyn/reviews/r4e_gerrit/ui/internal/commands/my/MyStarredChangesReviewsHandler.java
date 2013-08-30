@@ -18,6 +18,7 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.commands.my;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView;
 
@@ -42,16 +43,9 @@ public class MyStarredChangesReviewsHandler extends AbstractHandler {
 		// see http://gerrit-documentation.googlecode.com/svn/Documentation/2.5.2/user-search.html
 		//for My > Starred Changess--> is:starred
 		R4EGerritUi.Ftracer.traceInfo("Execute command :   "  +  "My > Starred Changes"); //$NON-NLS-1$
-		reviewTableView.processCommands("is:starred");
-
-//		R4EGerritUi.Ftracer.traceInfo("Execute:   "  ); //$NON-NLS-1$
-//		try {
-//			UIUtils.notInplementedDialog(aEvent.getCommand().getName());
-//		} catch (NotDefinedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		
+		reviewTableView.processCommands(GerritQuery.MY_STARRED_CHANGES);
+
 		return null;
 	}
 

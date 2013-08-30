@@ -319,7 +319,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 			@Override
 			public void handleEvent(Event event) {
-				UIUtils.notInplementedDialog("Search Button");
+				processCommands(GerritQuery.CUSTOM);
 			}});
 
 	}
@@ -546,10 +546,10 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	
 	/**
 	 * @param aTaskRepo
-	 * @param aQuery
+	 * @param aQueryType
 	 * @return
 	 */
-	private Object updateTable(final TaskRepository aTaskRepo, final String aQuery)  {
+	private Object updateTable(final TaskRepository aTaskRepo, final String aQueryType)  {
 		
 		final Job job = new Job(COMMAND_MESSAGE) {
 
@@ -565,18 +565,20 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 				aMonitor.beginTask(COMMAND_MESSAGE, IProgressMonitor.UNKNOWN);
 						
 				R4EGerritPlugin.Ftracer.traceInfo("repository:   " + aTaskRepo.getUrl() +
-						"\t query: " + aQuery); //$NON-NLS-1$
+						"\t query: " + aQueryType); //$NON-NLS-1$
 				
 				// If there is only have one Gerrit server, we can proceed as if it was already used before
 				IStatus status = null;
 				try {
-	                fReviewTable.createReviewItem(aQuery, aTaskRepo);
-	                getReviews(aTaskRepo, aQuery);
+	                fReviewTable.createReviewItem(aQueryType, aTaskRepo);
+	                getReviews(aTaskRepo, aQueryType);
 	                Display.getDefault().syncExec(new Runnable() {
 	                    @Override
 	                    public void run() {
-	                        setSearchLabel(aQuery);
-	                        setSearchText(aQuery);
+	                        setSearchLabel(aQueryType);
+	                        if (aQueryType != GerritQuery.CUSTOM ) {
+		                        setSearchText(aQueryType);	                        	
+	                        }
 	                        setRepositoryLabel(aTaskRepo.getRepositoryLabel());
 	                    }
 	                });
@@ -610,6 +612,21 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		}
 	}
 	
+	private String getSearchText () {
+		if (!fSearchRequestText.isDisposed() ) {
+			final String[] str  = new String[1];
+			Display.getDefault().syncExec(new Runnable() {
+				public void run() {
+					str[0] = fSearchRequestText.getText().trim();
+					R4EGerritUi.Ftracer.traceInfo( "Custom string: " + str[0]);
+				}
+			});
+			return str[0];
+		}
+		return null;
+	}
+	
+
 	private void setRepositoryLabel(String aSt) {
 		if (!fRepositoryResulLabel.isDisposed() ) {
 			fRepositoryResulLabel.setText(aSt);
@@ -636,6 +653,13 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
     	// Retrieve the query from the repository (if previously defined)
     	Set<RepositoryQuery> queries = TasksUiInternal.getTaskList().getQueries();
     	RepositoryQuery query = null;
+
+		//Look to a regular query, otherwise, need to create the proper custom query
+    	if (queryType == GerritQuery.CUSTOM ) {
+    		//For Custom query, need to get the extra data
+    		queryId = rtv.getTitle() + " - " + queryType + "- " + getSearchText();
+    	}
+    	
     	for (RepositoryQuery rquery : queries) {
     		if (rquery.getRepositoryUrl().equals(repository.getRepositoryUrl()) && rquery.getSummary().equals(queryId)) {
     			query = rquery;
@@ -650,7 +674,11 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         	query.setSummary(queryId);
             query.setAttribute(GerritQuery.TYPE, queryType);
     		query.setAttribute(GerritQuery.PROJECT, null);
-    		query.setAttribute(GerritQuery.QUERY_STRING, null);
+    		if (queryType == GerritQuery.CUSTOM ) {
+        		query.setAttribute(GerritQuery.QUERY_STRING, getSearchText());
+    		} else {
+        		query.setAttribute(GerritQuery.QUERY_STRING, null);    			
+    		}
     		TasksUiPlugin.getTaskList().addQuery(query);
     	}
 
@@ -658,7 +686,8 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
     	fCurrentQuery = query;
     	
     	// Fetch the list of reviews and pre-populate the table
-        R4EGerritTask[] reviews = getReviewList(repository, queryType);
+        R4EGerritTask[] reviews = getReviewList(repository, query);
+        
         fReviewTable.init(reviews);
         refresh();
     	
@@ -675,16 +704,11 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		}
     }
 	
-    private R4EGerritTask[] getReviewList(TaskRepository repository, String queryType) throws R4EQueryException {
-
-        // Format the query
-        IRepositoryQuery query = new RepositoryQuery(repository.getConnectorKind(), "query"); //$NON-NLS-1$
-        query.setAttribute(GerritQuery.TYPE, queryType);
-
+    private R4EGerritTask[] getReviewList(TaskRepository repository, RepositoryQuery aQuery) throws R4EQueryException {
+    	
         // Execute the query
-//        GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
         R4EGerritTaskDataCollector resultCollector = new R4EGerritTaskDataCollector();
-        IStatus status = fConnector.performQuery(repository, query, resultCollector, null, new NullProgressMonitor());
+        IStatus status = fConnector.performQuery(repository, aQuery, resultCollector, null, new NullProgressMonitor());
         if (!status.isOK()) {
             String msg = "Unable to read the Gerrit server.";
             throw new R4EQueryException(status, msg);
@@ -695,9 +719,11 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         List<TaskData> tasksData = resultCollector.getResults();
         for (TaskData taskData : tasksData) {
             R4EGerritTask review = new R4EGerritTask(taskData);
-            if (review.getAttribute(R4EGerritTask.DATE_COMPLETION) == null) {
+//            R4EGerritUi.Ftracer.traceInfo("Review: " + review.getAttribute(R4EGerritTask.TASK_ID) +
+//           		"\t Completion date: " + review.getAttribute(R4EGerritTask.DATE_COMPLETION));
+//            if (review.getAttribute(R4EGerritTask.DATE_COMPLETION) == null) {
                 reviews.add(review);
-            }
+ //           }
         }
         return reviews.toArray(new R4EGerritTask[0]);
     }
