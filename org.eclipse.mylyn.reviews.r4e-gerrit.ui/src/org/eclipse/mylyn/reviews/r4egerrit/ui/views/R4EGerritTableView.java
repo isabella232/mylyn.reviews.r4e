@@ -92,10 +92,12 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.services.IServiceLocator;
+import org.osgi.framework.Version;
 
 /**
  * This class initiate a new workbench view. The view
@@ -135,7 +137,12 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 	private final int SEARCH_WIDTH = 300;
 	private final int REPO_WIDTH = 200;
-	private final int VERSION_WIDTH = 70;
+	private final int VERSION_WIDTH = 100;
+	
+	private final String SEARCH_TOOLTIP = "Ex. status:open (or is:open) \n status:merged \n "
+			+ "is:draft \n status:open project:Foo \n "
+			+ "See explanation by selecting in the toolbar \n "
+			+ "Documentation > Searching";
 	
 	// ------------------------------------------------------------------------
 	// Member variables
@@ -166,7 +173,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	private static TableViewer fViewer;
 	
 	private ReviewTableData fReviewTable = new ReviewTableData();
-	private R4EGerritServerUtility fServerUtil = new R4EGerritServerUtility();
+	private R4EGerritServerUtility fServerUtil = R4EGerritServerUtility.getInstance();
 
 	private Map<TaskRepository, String> fMapRepoServer = null;
 
@@ -349,6 +356,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		//Create a SEARCH text data entry
 		fSearchRequestText = new Text (rightSsearchForm, SWT.BORDER);
 		fSearchRequestText.setLayoutData(new GridData(SEARCH_WIDTH, SWT.DEFAULT));
+		fSearchRequestText.setToolTipText(SEARCH_TOOLTIP);
 	
 		//Create a SEARCH button 
 		fSearchRequestBtn = new Button (rightSsearchForm, SWT.NONE);
@@ -551,7 +559,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		
 		if (fTaskRepository == null) {
 			//If we did not find the task Repository
-			fMapRepoServer = R4EGerritServerUtility.getGerritMapping();
+			fMapRepoServer = R4EGerritServerUtility.getInstance().getGerritMapping();
 			//Verify How many gerrit server are defined
 			if (fMapRepoServer.size() == 1) {
 				Set<TaskRepository> mapSet = fMapRepoServer.keySet();
@@ -575,6 +583,50 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 			updateTable (fTaskRepository, aQuery);
 		}
 
+	}
+	
+	/**
+	 * Find the last Gerrit server being used , otherwise consider the Eclipse.org gerrit server version as a default
+	 * @return Version
+	 */
+	public Version getlastGerritServerVersion () {
+		Version version = null;
+		String lastSaved = fServerUtil.getLastSavedGerritServer();
+		if (lastSaved != null) {
+			//Already saved a Gerrit server, so use it
+			fTaskRepository  = fServerUtil.getTaskRepo(lastSaved);
+		}
+		
+		if (fTaskRepository == null) {
+			//If we did not find the task Repository
+			fMapRepoServer = R4EGerritServerUtility.getInstance().getGerritMapping();
+			//Verify How many gerrit server are defined
+			if (fMapRepoServer.size() == 1) {
+				Set<TaskRepository> mapSet = fMapRepoServer.keySet();
+				for (TaskRepository key: mapSet) {
+				    fTaskRepository = key;
+					//Save it for the next query time
+					fServerUtil.saveLastGerritServer(key.getRepositoryUrl());
+					break;
+				}
+				
+			}
+		}
+		
+		//We should have a TaskRepository here, otherwise, the user need to define one
+		if (fTaskRepository != null) {
+			if (fConnector != null) {
+				GerritClient gerritClient = fConnector.getClient(fTaskRepository);
+				try {
+					version = gerritClient.getVersion(new NullProgressMonitor());
+					R4EGerritUi.Ftracer.traceInfo("Selected version: " + version.toString());
+				} catch (GerritException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return version;
 	}
 	
 	/**
@@ -615,7 +667,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	                        setRepositoryLabel(aTaskRepo.getRepositoryLabel());
 	                        GerritClient gerritClient = fConnector.getClient(aTaskRepo);
 	                        try {
-								R4EGerritUi.Ftracer.traceInfo("Jb GerritClient: " + gerritClient.getVersion(new NullProgressMonitor()) );
+								R4EGerritUi.Ftracer.traceInfo("GerritClient: " + gerritClient.getVersion(new NullProgressMonitor()) );
 								setRepositoryVersionLabel (gerritClient.getVersion(new NullProgressMonitor()).toString() );
 							} catch (GerritException e1) {
 								e1.printStackTrace();

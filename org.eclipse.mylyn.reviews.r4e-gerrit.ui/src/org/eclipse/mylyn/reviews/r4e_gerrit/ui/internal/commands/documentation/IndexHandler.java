@@ -18,9 +18,8 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.commands.documentation;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
-import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
+import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
 
 /**
  * @author Jacques Bouthillier
@@ -29,22 +28,18 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
  */
 
 public class IndexHandler extends AbstractHandler {
-
+	
+	private final String INDEX_DOCUMENTATION = "Documentation/index.html";
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
 	@Override
 	public Object execute(ExecutionEvent aEvent) throws ExecutionException {
-		// TODO Auto-generated method stub
 		R4EGerritUi.Ftracer.traceInfo("Search the documentation IndexHandler  " ); //$NON-NLS-1$
 
-		R4EGerritUi.Ftracer.traceInfo("Execute:  IndexHandler() "  ); //$NON-NLS-1$
-		try {
-			UIUtils.notInplementedDialog(aEvent.getCommand().getName());
-		} catch (NotDefinedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		R4EGerritServerUtility.getInstance().openWebBrowser (INDEX_DOCUMENTATION);
+
 		return null;
 	}
 

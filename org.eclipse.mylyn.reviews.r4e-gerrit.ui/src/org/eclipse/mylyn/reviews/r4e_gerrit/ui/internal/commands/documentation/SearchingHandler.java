@@ -18,9 +18,8 @@ package org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.commands.documentation;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
-import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
+import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
 
 /**
  * @author Jacques Bouthillier
@@ -29,7 +28,11 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
  */
 
 public class SearchingHandler extends AbstractHandler {
+	
 
+	private final String SEARCHING_DOCUMENTATION = "Documentation/user-search.html";
+
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
@@ -38,13 +41,8 @@ public class SearchingHandler extends AbstractHandler {
 		// TODO Auto-generated method stub
 		R4EGerritUi.Ftracer.traceInfo("Search the documentation SearchingHandler  " ); //$NON-NLS-1$
 
-		R4EGerritUi.Ftracer.traceInfo("Execute:  SearchingHandler() "  ); //$NON-NLS-1$
-		try {
-			UIUtils.notInplementedDialog(aEvent.getCommand().getName());
-		} catch (NotDefinedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		R4EGerritServerUtility.getInstance().openWebBrowser (SEARCHING_DOCUMENTATION);
+
 		return null;
 	}
 

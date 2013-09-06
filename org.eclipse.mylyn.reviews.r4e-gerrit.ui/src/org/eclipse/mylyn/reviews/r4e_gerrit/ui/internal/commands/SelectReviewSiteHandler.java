@@ -99,7 +99,7 @@ public class SelectReviewSiteHandler extends AbstractHandler {
 
 
 				//Map the Gerrit server
-				fServerUtil = new R4EGerritServerUtility();
+				fServerUtil = R4EGerritServerUtility.getInstance();
 				
 				//Debug purpose, see which project have a gerrit server
 				fMapRepoServer = fServerUtil.getGerritMapping();

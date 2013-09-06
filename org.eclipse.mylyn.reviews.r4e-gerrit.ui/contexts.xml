@@ -10,4 +10,7 @@
 			</enablement>
 		</topic>
 	</context>
+ <context id="org.eclipse.mylyn.reviews.r4e-gerrit.ui.documentationSearching">
+    <command label="Help_Command"/>
+ </context>
 </contexts>

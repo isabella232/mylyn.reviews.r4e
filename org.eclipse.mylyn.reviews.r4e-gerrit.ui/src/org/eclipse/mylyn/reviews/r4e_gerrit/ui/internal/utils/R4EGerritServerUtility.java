@@ -21,8 +21,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,8 +40,13 @@ import org.eclipse.mylyn.internal.tasks.core.RepositoryTemplateManager;
 import org.eclipse.mylyn.internal.tasks.core.TaskRepositoryManager;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
+import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.tasks.core.RepositoryTemplate;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
+import org.eclipse.ui.IEditorDescriptor;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 
 /**
@@ -75,20 +81,31 @@ public class R4EGerritServerUtility {
 	 */
 	private static final String LAST_GERRIT_FILE = "lastGerrit.txt";
 
+	/**
+	 * Field ECLIPSE_GERRIT_DEFAULT. (value is ""https://git.eclipse.org/r/"")
+	 */
+	private final String ECLIPSE_GERRIT_DEFAULT = "https://git.eclipse.org/r/";
+	
+	/**
+	 * Field SLASH. (value is ""/"")
+	 */
+	private final String SLASH = "/";
+
+
+
 	// ------------------------------------------------------------------------
 	// Variables
 	// ------------------------------------------------------------------------
 
-	private static R4EGerritServerUtility instance = null;
+	private static R4EGerritServerUtility fInstance = null;
 
-	private static Map<TaskRepository, String> fResultTask = new HashMap<TaskRepository,String>();
+	private Map<TaskRepository, String> fResultTask = new HashMap<TaskRepository,String>();
 	
 	// ------------------------------------------------------------------------
 	// Constructors
 	// ------------------------------------------------------------------------
-	public R4EGerritServerUtility() {
-		instance = this;
-		mapConfiguredGerritServer();
+	protected R4EGerritServerUtility() {
+		fInstance = this;
 		
 		//LATER: Map the workspace gerrit to the menu option
 		//addWorkspaceGerritRepo();
@@ -98,34 +115,10 @@ public class R4EGerritServerUtility {
 		//End Test
 	}
 
+
 	// ------------------------------------------------------------------------
 	// Methods Private
 	// ------------------------------------------------------------------------
-	
-	/**
-	 * Map the configured Gerrit server found in the TaskList
-	 * @return Map<TaskRepository, String>
-	 */
-	public Map<TaskRepository, String> mapConfiguredGerritServer () {
-		//Reset the list of Gerrit server
-		fResultTask.clear();
-		
-		TaskRepositoryManager repositoryManager = TasksUiPlugin.getRepositoryManager();
-		
-		//Only get the TaskRepository related to Gerrit review connnector
-		R4EGerritPlugin.Ftracer.traceInfo("--------Review repo ---------------");
-		Set<TaskRepository> reviewRepo = repositoryManager.getRepositories(GerritConnector.CONNECTOR_KIND);
-		for (TaskRepository taskRepo: reviewRepo) {
-		    R4EGerritPlugin.Ftracer.traceInfo("Add Gerrit Review repo: " + taskRepo.getRepositoryLabel() + "\t url: " + taskRepo.getRepositoryUrl());
-			fResultTask.put(taskRepo, taskRepo.getRepositoryUrl());
-			if (null != taskRepo.getRepositoryUrl()  ) {
-				adjustTemplatemanager(taskRepo);			
-			}
-		}
-		//Print a the end the info for all Gerrit 
-		printRepositoryTemplate();
-		return fResultTask;
-	}
 	
 	/**
 	 * Build a list of Gerrit server to display in the combo box in the dialogue window
@@ -276,21 +269,84 @@ public class R4EGerritServerUtility {
 		return file;
 	}
 	
+	/**
+	 * Build a URL for Gerrit documentation
+	 * @param aRequest specific documentation 
+	 * @return URL complete URL fo the selected site based on the Gerrit server and version
+	 * @throws MalformedURLException
+	 */
+	private URL buildDocumentationURL (String aRequest) throws MalformedURLException {
+		StringBuilder sb = new StringBuilder();
+
+		String lastSaved = getInstance ().getLastSavedGerritServer();
+		if (lastSaved == null) {
+			//Use Default, so ECLIPSE_GERRIT_DEFAULT
+			lastSaved = ECLIPSE_GERRIT_DEFAULT;
+		}
+		if (!lastSaved.endsWith(SLASH)) {
+			lastSaved = lastSaved.concat(SLASH);
+		}
+		sb.append(lastSaved);
+		sb.append(aRequest);
+		return new URL (sb.toString());
+	}
+	
+	/**
+	 * Search for a similar page in the eclipse editor
+	 * @param aUrl 
+	 * @return String
+	 */
+	private String getEditorId (URL aUrl) {
+		//Try to get the editor id
+		IEditorDescriptor desc = PlatformUI.getWorkbench().
+		        getEditorRegistry().getDefaultEditor(aUrl.getFile());
+		String id = null;
+		if (desc !=null) {
+			id = desc.getId();
+		}
+
+		return id;
+	}
+	
 	// ------------------------------------------------------------------------
 	// Methods Public
 	// ------------------------------------------------------------------------
-	public static R4EGerritServerUtility getDefault () {
-		if (instance == null) {
+	public static R4EGerritServerUtility getInstance () {
+		if (fInstance == null) {
 			new R4EGerritServerUtility();
 		}
-		return instance;
+		return fInstance;
 	}
 	
 	/**
 	 * Return the mapping of the available Gerrit server used in the user workspace
 	 * @return Map<Repository, String>
 	 */
-	public static Map<TaskRepository, String> getGerritMapping () {
+	public Map<TaskRepository, String> getGerritMapping () {
+		if (fResultTask == null ) {
+			fResultTask = new HashMap<TaskRepository,String>();
+		}
+			
+		
+		//Reset the list of Gerrit server
+		fResultTask.clear();
+		
+		TaskRepositoryManager repositoryManager = TasksUiPlugin.getRepositoryManager();
+		if (repositoryManager != null) {
+			//Only get the TaskRepository related to Gerrit review connnector
+			R4EGerritPlugin.Ftracer.traceInfo("--------Review repo ---------------");
+			Set<TaskRepository> reviewRepo = repositoryManager.getRepositories(GerritConnector.CONNECTOR_KIND);
+			for (TaskRepository taskRepo: reviewRepo) {
+			    R4EGerritPlugin.Ftracer.traceInfo("Add Gerrit Review repo: " + taskRepo.getRepositoryLabel() + "\t url: " + taskRepo.getRepositoryUrl());
+				fResultTask.put(taskRepo, taskRepo.getRepositoryUrl());
+				if (null != taskRepo.getRepositoryUrl()  ) {
+					adjustTemplatemanager(taskRepo);			
+				}
+			}
+			//Print a the end the info for all Gerrit 
+			printRepositoryTemplate();
+			
+		}
 		return fResultTask;
 	}
 	
@@ -345,6 +401,7 @@ public class R4EGerritServerUtility {
 	 */
 	public String getMenuSelectionURL (String aSt) {
 		String urlStr = null;
+		fResultTask = getGerritMapping();
 		if (!fResultTask.isEmpty()) {
 			Set<TaskRepository> mapSet = fResultTask.keySet();
 			R4EGerritPlugin.Ftracer.traceInfo("-------------------");
@@ -369,7 +426,7 @@ public class R4EGerritServerUtility {
 	 * 
 	 */
 	public TaskRepository getTaskRepo (String aStURL) {
-		
+		fResultTask = getGerritMapping();
 		if (aStURL != null && !fResultTask.isEmpty()) {
 			Set<TaskRepository> mapSet = fResultTask.keySet();
 			R4EGerritPlugin.Ftracer.traceInfo("-------------------");
@@ -384,7 +441,38 @@ public class R4EGerritServerUtility {
 		
 		return null;
 	}
+	
 
+	/**
+	 * Open the web browser for the specific documentation
+	 * @param String aDocumentation requested documentation
+	 */
+	public void openWebBrowser (String aDocumentation) {
+		if (fInstance == null) {
+			fInstance = getInstance();
+		}
+
+		IWorkbenchBrowserSupport workBenchSupport = PlatformUI.getWorkbench().getBrowserSupport();
+		URL url = null;
+		try {
+			url = buildDocumentationURL (aDocumentation);
+			try {
+			
+				//Using NULL as a browser id will create a new editor each time, 
+				//so we need to see if there is already an editor for this help
+				String id = getEditorId (url);
+				workBenchSupport.createBrowser(id).openURL(url);
+			} catch (PartInitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		R4EGerritUi.Ftracer.traceInfo("openWebBrowser for " + url );
+	}
+	
 	/**
 	 * Read the Gerrit server to populate the list of reviews
 	 */

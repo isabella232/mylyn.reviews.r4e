@@ -143,7 +143,7 @@ public class DynamicMenuAddition extends CompoundContributionItem implements IWo
 		fServiceLocator = aServiceLocator;
 		
 		//Read the Gerrit potential servers
-		fServer = new R4EGerritServerUtility();
+		fServer = R4EGerritServerUtility.getInstance();
 		R4EGerritPlugin.Ftracer.traceInfo("\t\t DynamicMenuAddition .initialize()()" );
 		
 	}

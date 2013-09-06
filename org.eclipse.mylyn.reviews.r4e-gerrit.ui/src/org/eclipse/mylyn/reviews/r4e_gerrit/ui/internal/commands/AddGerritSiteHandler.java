@@ -82,7 +82,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 
 	    R4EGerritPlugin.Ftracer.traceInfo("Create the Add button to search the Gerrit location " ); //$NON-NLS-1$
 		String menuItemText = "";
-		fServerUtil = new R4EGerritServerUtility();
+		fServerUtil = R4EGerritServerUtility.getInstance();
 		Object obj = aEvent.getTrigger();
 		Map<String, String> param = aEvent.getParameters();
 		R4EGerritTableView reviewTableView = R4EGerritTableView
@@ -186,7 +186,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 					TaskRepository taskRepositoryTmp = fServerUtil.getTaskRepo (taskRepository.getUrl());
 					if (taskRepositoryTmp == null) {
 						//Need to re-map our internal Gerrit Repo
-						fServerUtil.mapConfiguredGerritServer();
+						fServerUtil.getGerritMapping();
 					}
 					/*****************************************************/
 					/*                                                   */
@@ -227,7 +227,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 	private TaskRepository getTaskRepository (String aUrl) {
 		TaskRepository taskRepo = null;
 		//Search for the current Gerrit connector
-		taskRepo =  R4EGerritServerUtility.getDefault().getTaskRepo(aUrl);
+		taskRepo =  R4EGerritServerUtility.getInstance().getTaskRepo(aUrl);
 		
 		if (taskRepo == null) {
 			if (aUrl != null) {
