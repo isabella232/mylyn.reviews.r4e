@@ -148,7 +148,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	// Member variables
 	// ------------------------------------------------------------------------
 
-	private GerritConnector fConnector;
+	private GerritConnector fConnector = GerritCorePlugin.getDefault().getConnector();;
 
 	private TaskRepository fTaskRepository;
 	
@@ -216,9 +216,27 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	public R4EGerritTableView() {
 		super();
 		rtv = this;
-		fConnector = GerritCorePlugin.getDefault().getConnector();
 	}
 
+	
+	public void setConnector (GerritConnector connector)
+	{
+			fConnector = connector;
+	}
+
+
+	public void setReviewTableData (ReviewTableData ReviewTable)
+	{
+		fReviewTable = ReviewTable;
+	}
+
+	
+	public void setGerritServerUtility (R4EGerritServerUtility ServerUtil)
+	{
+		fServerUtil = ServerUtil;
+		
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
@@ -481,6 +499,10 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 	public static TableViewer getTableViewer() {
 		return fViewer;
+	}
+	
+	public  TaskRepository getTaskRepository() {
+		 return fTaskRepository;
 	}
 	
 	public static R4EGerritTableView getActiveView() {

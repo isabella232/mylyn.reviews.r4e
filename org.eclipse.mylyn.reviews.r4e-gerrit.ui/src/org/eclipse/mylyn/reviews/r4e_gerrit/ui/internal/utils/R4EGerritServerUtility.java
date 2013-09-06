@@ -168,21 +168,27 @@ public class R4EGerritServerUtility {
 	
 	private void printRepositoryTemplate() {
 		RepositoryTemplateManager templateManager = TasksUiPlugin.getRepositoryTemplateManager();
-		for (RepositoryTemplate template : templateManager.getTemplates(GerritConnector.CONNECTOR_KIND)) {
-		    R4EGerritPlugin.Ftracer.traceInfo("------------======================------------------");
-			 Set<Entry<String, String>> value = template.getAttributes().entrySet();
-			for (Map.Entry <String, String> entry: value) {
-			    R4EGerritPlugin.Ftracer.traceInfo("key: " + entry.getKey() + "\tvalue: " +
-						entry.getValue());
+		if (templateManager != null) {
+			for (RepositoryTemplate template : templateManager.getTemplates(GerritConnector.CONNECTOR_KIND)) {
+			    R4EGerritPlugin.Ftracer.traceInfo("------------======================------------------");
+				 Set<Entry<String, String>> value = template.getAttributes().entrySet();
+				 if (value != null) {
+						for (Map.Entry <String, String> entry: value) {
+						    R4EGerritPlugin.Ftracer.traceInfo("key: " + entry.getKey() + "\tvalue: " +
+									entry.getValue());
+						}					 
+				 }
 			}
 		}
 	}
 
 	private void printTaskRepository(TaskRepository aTask) {
 		Set<Entry<String, String>> value = aTask.getProperties().entrySet();
-		for (Map.Entry<String, String> entry : value) {
-		    R4EGerritPlugin.Ftracer.traceInfo("TaskRepo key: " + entry.getKey()
-					+ "\tvalue: " + entry.getValue());
+		if ( value != null) {
+			for (Map.Entry<String, String> entry : value) {
+			    R4EGerritPlugin.Ftracer.traceInfo("TaskRepo key: " + entry.getKey()
+						+ "\tvalue: " + entry.getValue());
+			}			
 		}
 		R4EGerritPlugin.Ftracer.traceInfo(" UserName: " + aTask.getUserName());
 		R4EGerritPlugin.Ftracer
@@ -336,12 +342,14 @@ public class R4EGerritServerUtility {
 			//Only get the TaskRepository related to Gerrit review connnector
 			R4EGerritPlugin.Ftracer.traceInfo("--------Review repo ---------------");
 			Set<TaskRepository> reviewRepo = repositoryManager.getRepositories(GerritConnector.CONNECTOR_KIND);
-			for (TaskRepository taskRepo: reviewRepo) {
-			    R4EGerritPlugin.Ftracer.traceInfo("Add Gerrit Review repo: " + taskRepo.getRepositoryLabel() + "\t url: " + taskRepo.getRepositoryUrl());
-				fResultTask.put(taskRepo, taskRepo.getRepositoryUrl());
-				if (null != taskRepo.getRepositoryUrl()  ) {
-					adjustTemplatemanager(taskRepo);			
-				}
+			if (reviewRepo !=null) {
+				for (TaskRepository taskRepo: reviewRepo) {
+				    R4EGerritPlugin.Ftracer.traceInfo("Add Gerrit Review repo: " + taskRepo.getRepositoryLabel() + "\t url: " + taskRepo.getRepositoryUrl());
+					fResultTask.put(taskRepo, taskRepo.getRepositoryUrl());
+					if (null != taskRepo.getRepositoryUrl()  ) {
+						adjustTemplatemanager(taskRepo);			
+					}
+				}				
 			}
 			//Print a the end the info for all Gerrit 
 			printRepositoryTemplate();
