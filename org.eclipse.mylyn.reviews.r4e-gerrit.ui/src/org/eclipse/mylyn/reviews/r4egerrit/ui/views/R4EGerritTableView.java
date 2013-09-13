@@ -38,19 +38,24 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.mylyn.commons.workbench.DelayedRefreshJob;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
 import org.eclipse.mylyn.internal.gerrit.core.GerritCorePlugin;
+import org.eclipse.mylyn.internal.gerrit.core.GerritOperationFactory;
 import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.internal.gerrit.core.client.GerritClient;
 import org.eclipse.mylyn.internal.gerrit.core.client.GerritException;
+import org.eclipse.mylyn.internal.gerrit.core.operations.GerritOperation;
+import org.eclipse.mylyn.internal.gerrit.ui.operations.GerritOperationDialog;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.ITaskListChangeListener;
 import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
 import org.eclipse.mylyn.internal.tasks.core.TaskContainerDelta;
 import org.eclipse.mylyn.internal.tasks.core.TaskTask;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
+import org.eclipse.mylyn.internal.tasks.ui.actions.SynchronizeEditorAction;
 import org.eclipse.mylyn.internal.tasks.ui.util.TasksUiInternal;
 import org.eclipse.mylyn.reviews.r4e_gerrit.R4EGerritPlugin;
 import org.eclipse.mylyn.reviews.r4e_gerrit.core.R4EGerritTask;
@@ -65,11 +70,13 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
 import org.eclipse.mylyn.tasks.core.IRepositoryElement;
 import org.eclipse.mylyn.tasks.core.IRepositoryModel;
+import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.ui.AbstractRepositoryConnectorUi;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.mylyn.tasks.ui.TasksUiUtil;
+import org.eclipse.mylyn.tasks.ui.editors.TaskEditor;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorInput;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -86,6 +93,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -150,7 +158,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 	private GerritConnector fConnector = GerritCorePlugin.getDefault().getConnector();;
 
-	private TaskRepository fTaskRepository;
+	private TaskRepository fTaskRepository = null;
 	
 	private RepositoryQuery fCurrentQuery = null;
 
@@ -453,7 +461,25 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		            editorInput = new TaskEditorInput(fTaskRepository, task);
 		        }
 		        String editorId = connectorUi.getTaskEditorId(task);
-				TasksUiUtil.openEditor(editorInput, editorId, null);
+				System.out.println("JBJB before  editorinout: " + editorInput.getName() + "\n\t editor id: " + editorId);
+				IEditorPart editorPart = TasksUiUtil.openEditor(editorInput, editorId, null);
+				if (editorPart instanceof TaskEditor) {
+					System.out.println("JBJB editorPart: " + editorPart + " Try to refreshed pages");
+					TaskEditor taskEditor = (TaskEditor) editorPart;
+					//Allow to open a Task even if not found locally yet
+					SynchronizeEditorAction synchAction = new SynchronizeEditorAction();
+					synchAction.selectionChanged(new StructuredSelection(taskEditor));
+					synchAction.run();
+
+//JBJB Seems not needed, we have not received the synch yet anyway, but we already have the LABELS FLAGS
+//					if (task instanceof R4EGerritTask) {
+//						//Refresh the table column with the appropriate data, so the "CR" and "V" column gets updated
+//						fReviewTable.updateReviewItem ((R4EGerritTask) task);
+//						refresh() ;
+//					}
+					
+				}
+				System.out.println("JBJB editorinout: " + editorInput.toString() + "\n\t editor id: " + editorId);
 			}
 		};
 	}
@@ -810,13 +836,14 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         // are handled by ITaskListChangeListener.containersChanged()
         GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
         Job job = null;
-        try {
-            job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
-		} catch (Exception e) {
-			if (job != null) {
-				job.cancel();
-			}
-		}
+        //JB test temp, remove the long query
+//        try {
+//            job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
+//		} catch (Exception e) {
+//			if (job != null) {
+//				job.cancel();
+//			}
+//		}
     }
 	
     private R4EGerritTask[] getReviewList(TaskRepository repository, RepositoryQuery aQuery) throws R4EQueryException {

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.eclipse.mylyn.reviews.r4e_gerrit.trace.Tracer;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model.ReviewTableData;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
@@ -13,6 +14,7 @@ import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
 import org.eclipse.mylyn.internal.gerrit.core.GerritCorePlugin;
 import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,24 +26,22 @@ import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.powermock.modules.junit4.PowerMockRunner;
 
 
-//@RunWith(MockitoJUnitRunner.class)
 @RunWith(PowerMockRunner.class)
-//
-@PrepareForTest(R4EGerritServerUtility.class)
+@PrepareForTest({R4EGerritServerUtility.class, GerritCorePlugin.class, R4EGerritUi.class})
 
 
 public class R4EGerritTableViewTest {
-
 	
 	private R4EGerritTableView r4eGerritTableView;
 	@Mock
     private R4EGerritServerUtility fServerUtil; 
-
+	R4EGerritUi R4EGUi;
+	public Tracer Ftracer;
 
 	@Test
 	public void setUp() throws Exception {
@@ -52,38 +52,61 @@ public class R4EGerritTableViewTest {
 	public void tearDown() throws Exception {
 	}
 
-//	@Test
+	@Test
+	// Use case testing when no previously Gerrit server exists (getLastSavedGerritServer()==null)
 	public void testProcessCommandsNoSavedServer() {
-		r4eGerritTableView = new R4EGerritTableView();
+		R4EGUi = new R4EGerritUi();
+		R4EGUi.Ftracer = new Tracer();
+		PowerMockito.mockStatic(R4EGerritUi.class);
+		Mockito.when(R4EGerritUi.getDefault()).thenReturn(new R4EGerritUi());	
+		PowerMockito.mockStatic(R4EGerritServerUtility.class);
+		GerritCorePlugin gcp = new GerritCorePluginStub();		
+		
+		PowerMockito.mockStatic(GerritCorePlugin.class);
+		
+		Mockito.when(GerritCorePlugin.getDefault()).thenReturn(gcp);		
 		GerritConnector fConnector = mock(GerritConnector.class);
-		ReviewTableData fReviewTable = mock(ReviewTableData.class);
+
+		r4eGerritTableView = new R4EGerritTableView();
 		R4EGerritServerUtility fServerUtil = mock(R4EGerritServerUtility.class);
-		r4eGerritTableView.setConnector(fConnector);
-		r4eGerritTableView.setReviewTableData(fReviewTable);
+
 		r4eGerritTableView.setGerritServerUtility(fServerUtil);	
 		
 		String ret = null;
 		when(fServerUtil.getLastSavedGerritServer()).thenReturn(ret);	
 		
+		Map<TaskRepository, String> fMapRepoServer = new HashMap<TaskRepository, String>();
+		
+		fMapRepoServer.put( new TaskRepository(GerritConnector.CONNECTOR_KIND, "http://repository"), " ");
+		Mockito.when(R4EGerritServerUtility.getInstance()).thenReturn(fServerUtil);
+		Mockito.when(R4EGerritServerUtility.getInstance().getGerritMapping()).thenReturn(fMapRepoServer);		
+		Mockito.when(fServerUtil.getGerritMapping()).thenReturn(fMapRepoServer);		
+		
 		// Last saved is null, a repository must be defined.
 		r4eGerritTableView.processCommands(GerritQuery.CUSTOM);
 		
-	    assertEquals(r4eGerritTableView.getTaskRepository(),null);
+		assertNotNull(r4eGerritTableView.getTaskRepository());
 
-
-	
 
 	}
 
-//	@Test
+	@Test
+	// Use case testing when no previously Gerrit server exists (fServerUtil.getTaskRepo(lastSaved)==null)
 	public void testProcessCommandsNoGerritRepo() {
+		R4EGUi = new R4EGerritUi();
+		R4EGUi.Ftracer = new Tracer();
+		PowerMockito.mockStatic(R4EGerritUi.class);
+		Mockito.when(R4EGerritUi.getDefault()).thenReturn(new R4EGerritUi());		
+		
 		PowerMockito.mockStatic(R4EGerritServerUtility.class);
+		GerritCorePlugin gcp = new GerritCorePluginStub();		
+		
 		PowerMockito.mockStatic(GerritCorePlugin.class);
 		
-		Mockito.when(GerritCorePlugin.getDefault().getConnector()).thenReturn(null);		
+		Mockito.when(GerritCorePlugin.getDefault()).thenReturn(gcp);
+		GerritConnector fConnector = mock(GerritConnector.class);
 
 		r4eGerritTableView = new R4EGerritTableView();
-		GerritConnector fConnector = mock(GerritConnector.class);
 		ReviewTableData fReviewTable = mock(ReviewTableData.class);
 		R4EGerritServerUtility fServerUtil = mock(R4EGerritServerUtility.class);
 		r4eGerritTableView.setConnector(fConnector);
@@ -97,29 +120,45 @@ public class R4EGerritTableViewTest {
 		when(fServerUtil.getLastSavedGerritServer()).thenReturn("lastSavedGerritServer");
 		
 		
-		when(fServerUtil.getTaskRepo(anyString())).thenReturn( new TaskRepository(GerritConnector.CONNECTOR_KIND, "http://repository") );
+		when(fServerUtil.getTaskRepo(anyString())).thenReturn( null );
 		
 		// no server defined
 		Map<TaskRepository, String> fMapRepoServer = new HashMap<TaskRepository, String>();
+		
+		fMapRepoServer.put( new TaskRepository(GerritConnector.CONNECTOR_KIND, "http://repository"), " ");
+		Mockito.when(R4EGerritServerUtility.getInstance()).thenReturn(fServerUtil);
 		Mockito.when(R4EGerritServerUtility.getInstance().getGerritMapping()).thenReturn(fMapRepoServer);		
+		Mockito.when(fServerUtil.getGerritMapping()).thenReturn(fMapRepoServer);		
 
 		r4eGerritTableView.processCommands(GerritQuery.CUSTOM);
-		
-		// check what now ?
+	
+		Iterator it = fMapRepoServer.entrySet().iterator();
+		while (it.hasNext()) {
+		    assertEquals(r4eGerritTableView.getTaskRepository(),((Map.Entry) it.next()).getKey());
+		}	
+
 
 	}	
 	
-//	@Test
+	@Test
+	// Use case testing when one previously Gerrit server exists 
 	public void testProcessCommandsOneGerritRepo() {
+		R4EGUi = new R4EGerritUi();
+		R4EGUi.Ftracer = new Tracer();
+		PowerMockito.mockStatic(R4EGerritUi.class);
+		Mockito.when(R4EGerritUi.getDefault()).thenReturn(new R4EGerritUi());
 		
 		PowerMockito.mockStatic(R4EGerritServerUtility.class);
-		String msg = "testProcessCommands2";
-		String reason = "testProcessCommands2.";
-		R4EGerritUi.Ftracer.traceInfo(msg );
-		UIUtils.showErrorDialog(msg, reason);
+
+		GerritCorePlugin gcp = new GerritCorePluginStub();		
+		
+		PowerMockito.mockStatic(GerritCorePlugin.class);
+		
+		Mockito.when(GerritCorePlugin.getDefault()).thenReturn(gcp);
+		GerritConnector fConnector = mock(GerritConnector.class);		
 		
 		r4eGerritTableView = new R4EGerritTableView();
-		GerritConnector fConnector = mock(GerritConnector.class);
+//		GerritConnector fConnector = mock(GerritConnector.class);
 		ReviewTableData fReviewTable = mock(ReviewTableData.class);
 		R4EGerritServerUtility fServerUtil = mock(R4EGerritServerUtility.class);
 		r4eGerritTableView.setConnector(fConnector);
@@ -137,7 +176,6 @@ public class R4EGerritTableViewTest {
 		// one server defined
 		Map<TaskRepository, String> fMapRepoServer = new HashMap<TaskRepository, String>();
 		fMapRepoServer.put( new TaskRepository(GerritConnector.CONNECTOR_KIND, "http://repository"), " ");
-		Mockito.when(R4EGerritServerUtility.getInstance().getGerritMapping()).thenReturn(fMapRepoServer);
 
 		r4eGerritTableView.processCommands(GerritQuery.CUSTOM);
 

@@ -26,4 +26,5 @@ Export-Package: org.eclipse.mylyn.reviews.r4e_gerrit.ui,
  org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.model,
  org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils,
  org.eclipse.mylyn.reviews.r4egerrit.ui.views
-Import-Package: org.eclipse.mylyn.internal.gerrit.ui.editor
+Import-Package: org.eclipse.mylyn.internal.gerrit.ui.editor,
+ org.eclipse.mylyn.internal.gerrit.ui.operations

@@ -155,7 +155,7 @@ public class R4EGerritTask extends AbstractTask {
     private String getValue(TaskAttribute taskAttribute) {
         if (taskAttribute != null) {
             List<String> values = taskAttribute.getValues();
-            if (values.size() > 0) {
+            if (values != null && values.size() > 0) {
                 return values.get(0);
             }
         }
