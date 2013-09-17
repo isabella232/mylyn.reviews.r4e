@@ -728,7 +728,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
                 catch (R4EQueryException e) {
                     status = e.getStatus();
                     R4EGerritPlugin.Ftracer.traceWarning(status.toString());
-                    UIUtils.showErrorDialog(e.getMessage(), status.toString());
+//                    UIUtils.showErrorDialog(e.getMessage(), status.toString());
                 }
 
 				aMonitor.done();
@@ -835,6 +835,20 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
     	// Start the long-running synchronized query; the individual review details
         // are handled by ITaskListChangeListener.containersChanged()
         GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
+        Version version = getlastGerritServerVersion ();
+        if (version != null && version.getMajor() >= 2) {
+        	if (version.getMinor() < 5) {
+        		//We are in Gerrit server 2.4 and lower, need a resynch
+                Job job = null;
+                try {
+                    job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
+        		} catch (Exception e) {
+        			if (job != null) {
+        				job.cancel();
+        			}
+        		}
+        	}
+        }
         Job job = null;
         //JB test temp, remove the long query
 //        try {
