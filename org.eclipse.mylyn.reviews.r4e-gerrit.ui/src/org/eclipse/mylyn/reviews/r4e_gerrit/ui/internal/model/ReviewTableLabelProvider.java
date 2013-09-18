@@ -146,11 +146,13 @@ public class ReviewTableLabelProvider extends LabelProvider implements
 	 */
 	private Image getVerifyStateImage(int aState) {
 		switch (aState) {
+		case 2:
 		case 1:
 			return fImageRegistry.get(CHECKED_IMAGE);
 		case 0:
 			break;
 		case -1:
+		case -2:
 			return fImageRegistry.get(NOT_OK_IMAGE);
 		default:
 			break;

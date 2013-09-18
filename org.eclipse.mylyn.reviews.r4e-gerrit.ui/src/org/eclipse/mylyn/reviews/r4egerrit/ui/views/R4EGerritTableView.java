@@ -351,7 +351,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		fSearchForLabel = new Label(leftSearchForm, SWT.NONE);
 		fSearchForLabel.setText(SEARCH_LABEL);
 		
-		// Label for the SEARH request
+		// Label for the SEARCH request
 		fSearchResulLabel = new Label(leftSearchForm, SWT.NONE);
 		fSearchResulLabel.setLayoutData(new GridData(REPO_WIDTH, SWT.DEFAULT));
 
@@ -465,13 +465,11 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 					SynchronizeEditorAction synchAction = new SynchronizeEditorAction();
 					synchAction.selectionChanged(new StructuredSelection(taskEditor));
 					synchAction.run();
-
-//JBJB Seems not needed, we have not received the synch yet anyway, but we already have the LABELS FLAGS
-//					if (task instanceof R4EGerritTask) {
-//						//Refresh the table column with the appropriate data, so the "CR" and "V" column gets updated
-//						fReviewTable.updateReviewItem ((R4EGerritTask) task);
-//						refresh() ;
-//					}
+					if (task instanceof R4EGerritTask) {
+						//Refresh the table column with the appropriate data, so the "CR" and "V" column gets updated
+						fReviewTable.updateReviewItem((R4EGerritTask) task);
+						refresh() ;
+					}
 					
 				}
 				System.out.println("JBJB editorinout: " + editorInput.toString() + "\n\t editor id: " + editorId);
