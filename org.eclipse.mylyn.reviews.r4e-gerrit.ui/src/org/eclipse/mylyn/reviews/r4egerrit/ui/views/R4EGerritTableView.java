@@ -43,12 +43,9 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.mylyn.commons.workbench.DelayedRefreshJob;
 import org.eclipse.mylyn.internal.gerrit.core.GerritConnector;
 import org.eclipse.mylyn.internal.gerrit.core.GerritCorePlugin;
-import org.eclipse.mylyn.internal.gerrit.core.GerritOperationFactory;
 import org.eclipse.mylyn.internal.gerrit.core.GerritQuery;
 import org.eclipse.mylyn.internal.gerrit.core.client.GerritClient;
 import org.eclipse.mylyn.internal.gerrit.core.client.GerritException;
-import org.eclipse.mylyn.internal.gerrit.core.operations.GerritOperation;
-import org.eclipse.mylyn.internal.gerrit.ui.operations.GerritOperationDialog;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.ITaskListChangeListener;
 import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
@@ -70,7 +67,6 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EUIConstants;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
 import org.eclipse.mylyn.tasks.core.IRepositoryElement;
 import org.eclipse.mylyn.tasks.core.IRepositoryModel;
-import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.ui.AbstractRepositoryConnectorUi;
@@ -100,7 +96,6 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
@@ -850,14 +845,13 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         	}
         }
         Job job = null;
-        //JB test temp, remove the long query
-//        try {
-//            job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
-//		} catch (Exception e) {
-//			if (job != null) {
-//				job.cancel();
-//			}
-//		}
+        try {
+            job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
+		} catch (Exception e) {
+			if (job != null) {
+				job.cancel();
+			}
+		}
     }
 	
     private R4EGerritTask[] getReviewList(TaskRepository repository, RepositoryQuery aQuery) throws R4EQueryException {
@@ -875,11 +869,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         List<TaskData> tasksData = resultCollector.getResults();
         for (TaskData taskData : tasksData) {
             R4EGerritTask review = new R4EGerritTask(taskData);
-//            R4EGerritUi.Ftracer.traceInfo("Review: " + review.getAttribute(R4EGerritTask.TASK_ID) +
-//           		"\t Completion date: " + review.getAttribute(R4EGerritTask.DATE_COMPLETION));
-//            if (review.getAttribute(R4EGerritTask.DATE_COMPLETION) == null) {
-                reviews.add(review);
- //           }
+            reviews.add(review);
         }
         return reviews.toArray(new R4EGerritTask[0]);
     }
