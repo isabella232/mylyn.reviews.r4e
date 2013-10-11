@@ -159,7 +159,7 @@ public class AddGerritSiteHandler extends AbstractHandler {
 			public IStatus run(final IProgressMonitor aMonitor) {
 				aMonitor.beginTask(COMMAND_MESSAGE, IProgressMonitor.UNKNOWN);
 						
-				TaskRepository taskRepository = getTaskRepository(fServerUtil.getLastSavedGerritServer()); 
+				TaskRepository taskRepository = getTaskRepository(""); 
 				
 				R4EGerritPlugin.Ftracer.traceInfo("repository:   " + taskRepository.getUrl()); //$NON-NLS-1$
 				

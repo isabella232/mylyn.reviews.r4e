@@ -58,7 +58,16 @@
                 label="Add..."
                 style="push">
           </command>
-        </menuContribution>
+          <command
+                commandId="command.showTaskRepo"
+                id="Task.Repositories"
+                label="Task Repositories..."
+                style="push">
+             <parameter
+                   name="org.eclipse.ui.views.showView.viewId"
+                   value="org.eclipse.mylyn.tasks.ui.views.repositories">
+             </parameter>
+          </command>        </menuContribution>
    	<!-- Define the toolbar menu for R4E-Gerrit UI "with pulldown menu"
 	-->
       <menuContribution
@@ -320,6 +329,17 @@
       <command
             id="org.eclipse.mylyn.reviews.r4e-gerrit.addGerritSite"
             name="Add ...">
+      </command>
+      <command
+            defaultHandler="org.eclipse.ui.handlers.ShowViewHandler"
+            id="command.showTaskRepo"
+            name="Task Repositories...">
+            <commandParameter
+                  id="org.eclipse.ui.views.showView.viewId"
+                  name="viewId"
+                  optional="true"
+                  values="org.eclipse.ui.internal.registry.ViewParameterValues">
+            </commandParameter>            
       </command>
 
          <!-- The following are the commands under the "All" sub-menu
