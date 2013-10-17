@@ -55,7 +55,7 @@
           <command
                 commandId="org.eclipse.mylyn.reviews.r4e-gerrit.addGerritSite"
                 id="Search.gerritSite"
-                label="Add..."
+                label="Add Gerrit Repository..."
                 style="push">
           </command>
           <command
@@ -328,7 +328,7 @@
 
       <command
             id="org.eclipse.mylyn.reviews.r4e-gerrit.addGerritSite"
-            name="Add ...">
+            name="Add Gerrit Repository...">
       </command>
       <command
             defaultHandler="org.eclipse.ui.handlers.ShowViewHandler"

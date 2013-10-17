@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.eclipse.mykyn.reviews.r4eGerrit.feature_0.1.0.qualifier.jar" id="org.eclipse.mykyn.reviews.r4eGerrit.feature" version="0.1.0.qualifier">
+      <category name="Gerrit Dashboard"/>
+   </feature>
+   <category-def name="Gerrit Dashboard" label="Gerrit Dashboard"/>
+</site>

@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,6 +82,11 @@ public class R4EGerritServerUtility {
 	 * Field LAST_GERRIT_FILE. (value is ""lastGerrit.txt"")
 	 */
 	private static final String LAST_GERRIT_FILE = "lastGerrit.txt";
+
+	/**
+	 * Field LAST_COMMANDS_FILE. (value is ""lastCommands.txt"")
+	 */
+	private static final String LAST_COMMANDS_FILE = "lastCommands.txt";
 
 	/**
 	 * Field ECLIPSE_GERRIT_DEFAULT. (value is ""https://git.eclipse.org/r/"")
@@ -268,9 +275,14 @@ public class R4EGerritServerUtility {
 		return null;
 	}
 
-	private File getLastGerritFile () {
+	/**
+	 * Build and return the File storing the persistent data
+	 * @param String aFile
+	 * @return File
+	 */
+	private File getLastGerritFile (String aFile) {
 		IPath ipath = R4EGerritPlugin.getDefault().getStateLocation();
-		String fileName = ipath.append(LAST_GERRIT_FILE).toPortableString();
+		String fileName = ipath.append(aFile).toPortableString();
 		File file = new File (fileName);
 		return file;
 	}
@@ -365,7 +377,7 @@ public class R4EGerritServerUtility {
 	 */
 	public Boolean saveLastGerritServer (String aURL) {
 		Boolean ok = true;
-		File file = getLastGerritFile();
+		File file = getLastGerritFile(LAST_GERRIT_FILE);
 		try {
 			FileWriter fw= new FileWriter(file);
 			BufferedWriter out = new BufferedWriter(fw);
@@ -385,7 +397,7 @@ public class R4EGerritServerUtility {
 	 */
 	public String getLastSavedGerritServer () {
 		String lastGerritURL = null;
-		File file = getLastGerritFile();
+		File file = getLastGerritFile(LAST_GERRIT_FILE);
 		if (file != null) {
 			try {
 				FileReader fr= new FileReader(file);
@@ -479,6 +491,56 @@ public class R4EGerritServerUtility {
 			e1.printStackTrace();
 		}
 		R4EGerritUi.Ftracer.traceInfo("openWebBrowser for " + url );
+	}
+	
+	/**
+	 * Save the list of the last 5 commands
+	 * @param LinkedHashSet<String>
+	 * @return Boolean
+	 */
+	public Boolean saveLastCommandList (LinkedHashSet<String> aCommands) {
+		Boolean ok = true;
+		File file = getLastGerritFile(LAST_COMMANDS_FILE);
+		try {
+			FileWriter fw= new FileWriter(file);
+			BufferedWriter out = new BufferedWriter(fw);
+			Iterator<String> iter = aCommands.iterator();
+			while ( iter.hasNext()) {
+				String s = iter.next();
+				out.write(s);
+				out.newLine();
+			}
+			out.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			ok = false;
+		}
+		
+		return ok;
+	}
+	
+	/**
+	 * Return the list of the last commands saved
+	 * @return LinkedHashSet
+	 */
+	public LinkedHashSet getListLastCommands () {
+		LinkedHashSet<String> lastCommands = new LinkedHashSet<String>();
+		File file = getLastGerritFile(LAST_COMMANDS_FILE);
+		if (file != null) {
+			try {
+				FileReader fr= new FileReader(file);
+				BufferedReader in = new BufferedReader(fr);
+				while (in.ready()) {
+					String line = in.readLine();
+					lastCommands.add(line);
+				}
+				in.close();
+			} catch (IOException e1) {
+				//When there is no file, 
+				//e1.printStackTrace();
+			}			
+		}
+		return lastCommands;
 	}
 	
 	/**

@@ -18,6 +18,8 @@
 package org.eclipse.mylyn.reviews.r4egerrit.ui.views;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +50,7 @@ import org.eclipse.mylyn.internal.gerrit.core.client.GerritClient;
 import org.eclipse.mylyn.internal.gerrit.core.client.GerritException;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.ITaskListChangeListener;
+import org.eclipse.mylyn.internal.tasks.core.ITasksCoreConstants;
 import org.eclipse.mylyn.internal.tasks.core.RepositoryQuery;
 import org.eclipse.mylyn.internal.tasks.core.TaskContainerDelta;
 import org.eclipse.mylyn.internal.tasks.core.TaskTask;
@@ -79,6 +82,7 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -86,7 +90,6 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -134,19 +137,21 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	// Labels for the Search 
 	private final String SEARCH_LABEL 	= "Current Query:";
 	private final String SEARCH_BTN 	= "Search";
-	private final String REPOSITORY 	= "Repository:";
-	private final String VERSION 		= "Version:";
 	private final String TOTAL_COUNT 	= "Total reviews:";
+	private final String GERRIT_LABEL   = " - Gerrit ";
 
 	private final int SEARCH_WIDTH = 300;
 	private final int REPO_WIDTH = 200;
-	private final int VERSION_WIDTH = 100;
+	private final int VERSION_WIDTH = 35;
 	
 	private final String SEARCH_TOOLTIP = "Ex. status:open (or is:open) \n status:merged \n "
 			+ "is:draft \n status:open project:Foo \n "
 			+ "See explanation by selecting in the toolbar \n "
 			+ "Documentation > Searching";
 	
+	//Numbers of menu items in the Search pulldown menu; SEARCH_SIZE_MENU_LIST + 1 will be the max
+	private final int SEARCH_SIZE_MENU_LIST = 4;
+
 	// ------------------------------------------------------------------------
 	// Member variables
 	// ------------------------------------------------------------------------
@@ -161,18 +166,15 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	private Label 	fSearchForLabel;
 	private Label	fSearchResulLabel;
 
-	private Label 	fRepositoryLabel;
-	private Label	fRepositoryResulLabel;
-
-    private Label 	fRepositoryVersionLabel;
 	private Label	fRepositoryVersionResulLabel;
 	
     private Label 	fReviewsTotalLabel;	
     private Label 	fReviewsTotalResultLabel;	
 	
-	private Text	fSearchRequestText;
+	private Combo	fSearchRequestText;
 	private Button	fSearchRequestBtn;
 	
+	private LinkedHashSet<String>   fRequestList = new LinkedHashSet<String>();
 	private static TableViewer fViewer;
 	
 	private ReviewTableData fReviewTable = new ReviewTableData();
@@ -181,6 +183,9 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	private Map<TaskRepository, String> fMapRepoServer = null;
 
 	private Action doubleClickAction;
+	
+	private final LinkedHashSet<Job> fJobs = new LinkedHashSet<Job>();
+	
 
 	// ------------------------------------------------------------------------
 	// TableRefreshJob
@@ -247,6 +252,17 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	public void dispose() {
 		TasksUiPlugin.getTaskList().removeChangeListener(this);
 		fTableRefreshJob.cancel();
+		cleanJobs();		
+	}
+	
+	private void cleanJobs () {
+		Iterator<Job> iter = fJobs.iterator();
+		while (iter.hasNext()) {
+			Job job  = iter.next();
+			job.sleep();
+			job.cancel();
+		}
+        fJobs.clear();
 	}
 
 	/**
@@ -302,6 +318,7 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	 * Create a group to show the search command and a search text
 	 * @param Composite aParent
 	 */
+	@SuppressWarnings("unchecked")
 	private void createSearchSection(Composite aParent) {
 		
 		final Group formGroup =  new Group(aParent, SWT.SHADOW_ETCHED_IN | SWT.H_SCROLL);
@@ -325,26 +342,16 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		leftSearchForm.setLayoutData(gribDataViewer);
 
 		GridLayout leftLayoutForm = new GridLayout();
-		leftLayoutForm.numColumns = 4;
+		leftLayoutForm.numColumns = 5;
 		leftLayoutForm.marginHeight = 0;
 		leftLayoutForm.makeColumnsEqualWidth = false;
 		leftLayoutForm.horizontalSpacing = 10;
 		
 		leftSearchForm.setLayout(leftLayoutForm);
 		
-		//Label to display the repository
-		fRepositoryLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryLabel.setText(REPOSITORY);
-		
-		fRepositoryResulLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryResulLabel.setLayoutData(new GridData(REPO_WIDTH, SWT.DEFAULT));
-
-		//Label to display the repository version
-		fRepositoryVersionLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryVersionLabel.setText(VERSION);
-		
+		//Label to display the repository and the version
 		fRepositoryVersionResulLabel = new Label(leftSearchForm, SWT.NONE);
-		fRepositoryVersionResulLabel.setLayoutData(new GridData(VERSION_WIDTH, SWT.DEFAULT));	
+		fRepositoryVersionResulLabel.setLayoutData(new GridData(REPO_WIDTH, SWT.DEFAULT));	
 		
 		
 		// Label for SEARCH for
@@ -375,9 +382,12 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		rightSsearchForm.setLayout(rightLayoutForm);
 
 		//Create a SEARCH text data entry
-		fSearchRequestText = new Text (rightSsearchForm, SWT.BORDER);
+		fSearchRequestText = new Combo (rightSsearchForm, SWT.BORDER);
 		fSearchRequestText.setLayoutData(new GridData(SEARCH_WIDTH, SWT.DEFAULT));
 		fSearchRequestText.setToolTipText(SEARCH_TOOLTIP);
+		//Get the last saved commands
+		fRequestList = fServerUtil.getListLastCommands();
+		setSearchText("");
 	
 		//Create a SEARCH button 
 		fSearchRequestBtn = new Button (rightSsearchForm, SWT.NONE);
@@ -456,10 +466,8 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		            editorInput = new TaskEditorInput(fTaskRepository, task);
 		        }
 		        String editorId = connectorUi.getTaskEditorId(task);
-				System.out.println("JBJB before  editorinout: " + editorInput.getName() + "\n\t editor id: " + editorId);
 				IEditorPart editorPart = TasksUiUtil.openEditor(editorInput, editorId, null);
 				if (editorPart instanceof TaskEditor) {
-					System.out.println("JBJB editorPart: " + editorPart + " Try to refreshed pages");
 					TaskEditor taskEditor = (TaskEditor) editorPart;
 					//Allow to open a Task even if not found locally yet
 					SynchronizeEditorAction synchAction = new SynchronizeEditorAction();
@@ -472,7 +480,6 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 					}
 					
 				}
-				System.out.println("JBJB editorinout: " + editorInput.toString() + "\n\t editor id: " + editorId);
 			}
 		};
 	}
@@ -671,13 +678,30 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	}
 	
 	/**
+	 * Verify if the Gerrit version is before 2.5
+	 * @return boolean
+	 */
+	public boolean isGerritVersionBefore_2_5 () {
+		boolean ret = false;
+	
+        Version version = getlastGerritServerVersion ();
+        if (version != null && version.getMajor() >= 2) {
+        	if (version.getMinor() < 5) {
+        		ret = true;
+        	}
+        }
+		return ret;
+	}
+	
+	/**
 	 * @param aTaskRepo
 	 * @param aQueryType
 	 * @return
 	 */
 	private Object updateTable(final TaskRepository aTaskRepo, final String aQueryType)  {
 		
-		final Job job = new Job(COMMAND_MESSAGE) {
+		String cmdMessage = COMMAND_MESSAGE + " " + aTaskRepo.getUrl() + " : " + aQueryType;
+		final Job job = new Job(cmdMessage) {
 
 			public String familyName = R4EUIConstants.R4E_UI_JOB_FAMILY;
 
@@ -704,12 +728,14 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 	                        setSearchLabel(aQueryType);
 	                        if (aQueryType != GerritQuery.CUSTOM ) {
 		                        setSearchText(aQueryType);	                        	
+	                        } else {
+	                        	//Record the custom query
+	                        	setSearchText (getSearchText());
 	                        }
-	                        setRepositoryLabel(aTaskRepo.getRepositoryLabel());
 	                        GerritClient gerritClient = fConnector.getClient(aTaskRepo);
 	                        try {
 								R4EGerritUi.Ftracer.traceInfo("GerritClient: " + gerritClient.getVersion(new NullProgressMonitor()) );
-								setRepositoryVersionLabel (gerritClient.getVersion(new NullProgressMonitor()).toString() );
+								setRepositoryVersionLabel (aTaskRepo.getRepositoryLabel(), gerritClient.getVersion(new NullProgressMonitor()).toString() );
 							} catch (GerritException e1) {
 								e1.printStackTrace();
 							}
@@ -725,9 +751,14 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
                 }
 
 				aMonitor.done();
+				fJobs.remove(this);
 				return status;
 			}
 		};
+		//Clean some Jobs if still running
+		cleanJobs();
+		
+		fJobs.add(job);
 		job.setUser(true);
 		job.schedule();
 		
@@ -742,8 +773,56 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 
 	private void setSearchText (String aSt) {
 		if (!fSearchRequestText.isDisposed() ) {
-			fSearchRequestText.setText(aSt);
+			if (aSt != null && aSt != "" ) {
+				int index = -1;
+				String [] ar = fSearchRequestText.getItems();
+				for (int i =0; i< ar.length; i++ ) {
+					if ( ar[i].equals(aSt.trim()) ) {
+						index = i;
+						break;
+					}
+				}
+				
+				if (index != -1) {
+					fRequestList.remove(fRequestList.remove(ar[index]));
+				} else {
+					//Remove the oldest element from the list
+					if (fRequestList.size() > SEARCH_SIZE_MENU_LIST) {
+						Object obj= fRequestList.iterator().next(); //Should be the first item in the list
+						fRequestList.remove(fRequestList.remove(obj));
+					}
+				}
+				//Add the new text in the combo
+				fRequestList.add (aSt.trim());
+				//Save the list of commands in file
+				fServerUtil.saveLastCommandList(fRequestList);
+				
+			}
+			
+			fSearchRequestText.setItems( reverseOrder ( fRequestList.toArray(new String[0])));
+			if (aSt != null && aSt != "" ) {
+				fSearchRequestText.select(0);			
+			} else {
+				//Leave the text empty
+				fSearchRequestText.setText("");
+			}
 		}
+	}
+	
+	/**
+	 * Take the list of last save queries and reverse the order to have 
+	 * the latest selection to be the first one on the pull-down menu
+	 * @param aList String[]
+	 * @return String[] reverse order
+	 */
+	private String[] reverseOrder (String[] aList) {
+		int size = aList.length;
+		int index = size - 1;
+		String [] rev = new String[size];
+		for (int i = 0; i < size; i++) {
+			rev[i] = aList[index--];
+		}
+		return rev;
 	}
 	
 	private String getSearchText () {
@@ -760,13 +839,6 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		return null;
 	}
 	
-
-	private void setRepositoryLabel(String aSt) {
-		if (!fRepositoryResulLabel.isDisposed() ) {
-			fRepositoryResulLabel.setText(aSt);
-		}
-	}
-
 	// ------------------------------------------------------------------------
 	// Query handling
 	// ------------------------------------------------------------------------
@@ -808,6 +880,9 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
         	query.setSummary(queryId);
             query.setAttribute(GerritQuery.TYPE, queryType);
     		query.setAttribute(GerritQuery.PROJECT, null);
+   		 	// Flag to prevent the query to be displayed in the Task List 
+    		// and pop-up list showing all the times
+   		 	query.setAttribute(ITasksCoreConstants.ATTRIBUTE_HIDDEN, Boolean.toString(true));
     		if (queryType == GerritQuery.CUSTOM ) {
         		query.setAttribute(GerritQuery.QUERY_STRING, getSearchText());
     		} else {
@@ -828,20 +903,20 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
     	// Start the long-running synchronized query; the individual review details
         // are handled by ITaskListChangeListener.containersChanged()
         GerritConnector connector = GerritCorePlugin.getDefault().getConnector();
-        Version version = getlastGerritServerVersion ();
-        if (version != null && version.getMajor() >= 2) {
-        	if (version.getMinor() < 5) {
-        		//We are in Gerrit server 2.4 and lower, need a resynch
-                Job job = null;
-                try {
-                    job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
-        		} catch (Exception e) {
-        			if (job != null) {
-        				job.cancel();
-        			}
-        		}
-        	}
-        }
+
+        //Do we re-synch for all Gerrit server version or just Gerrit 2.4 ?
+//        if (isGerritVersionBefore_2_5()) {
+//            Job job = null;
+//            try {
+//                job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
+//    		} catch (Exception e) {
+//    			if (job != null) {
+//    				job.cancel();
+//    			}
+//    		}
+//    	}
+        	
+        //Should sync any Gerrit server instead of waiting the timer re-synch 
         Job job = null;
         try {
             job = TasksUiInternal.synchronizeQuery(connector, query, null, true);
@@ -933,9 +1008,11 @@ public class R4EGerritTableView extends ViewPart implements ITaskListChangeListe
 		
 	}
 
-	private void setRepositoryVersionLabel(String aSt) {
+	private void setRepositoryVersionLabel(String aRepo, String aVersion) {
 		if (!fRepositoryVersionResulLabel.isDisposed() ) {
-			fRepositoryVersionResulLabel.setText(aSt);
+			// e.g. "Eclipse.org Reviews - Gerrit 2.6.1" 
+			String s = aRepo + GERRIT_LABEL + aVersion;
+			fRepositoryVersionResulLabel.setText(s);
 		}
 	}
 

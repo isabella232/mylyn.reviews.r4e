@@ -22,7 +22,6 @@ import org.eclipse.mylyn.reviews.r4e_gerrit.ui.R4EGerritUi;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.R4EGerritServerUtility;
 import org.eclipse.mylyn.reviews.r4e_gerrit.ui.internal.utils.UIUtils;
 import org.eclipse.mylyn.reviews.r4egerrit.ui.views.R4EGerritTableView;
-import org.osgi.framework.Version;
 
 /**
  * @author Jacques Bouthillier
@@ -39,19 +38,15 @@ public class RestAPIHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		R4EGerritUi.Ftracer.traceInfo("Search the documentation RestAPIHandler  " ); //$NON-NLS-1$
-		Version version = R4EGerritTableView.getActiveView().getlastGerritServerVersion();
-		//Testing the Gerrit server before getting the documentation
-		if (version != null) {
-			if (version.getMajor() >= 2) {
-				if (version.getMinor() < 5) {
-					String msg = "Selected Gerrit server: " + version.toString();
-					String reason = "Gerrit server is too old, need at least Gerrit version 2.5 \nto get Gerrit Code Review - REST API documentation.";
-					R4EGerritUi.Ftracer.traceInfo(msg );
-					UIUtils.showErrorDialog(msg, reason);
-					return null;
-				}
-			}
-		}
+		R4EGerritTableView view =  R4EGerritTableView.getActiveView();
+		
+        if (view.isGerritVersionBefore_2_5()) {
+			String msg = "Selected Gerrit server: " + view.getlastGerritServerVersion().toString();
+			String reason = "Gerrit server is too old, need at least Gerrit version 2.5 \nto get Gerrit Code Review - REST API documentation.";
+			R4EGerritUi.Ftracer.traceInfo(msg );
+			UIUtils.showErrorDialog(msg, reason);
+			return null;
+        }
 		
 		R4EGerritServerUtility.getInstance().openWebBrowser (REST_API_DOCUMENTATION);
 		
