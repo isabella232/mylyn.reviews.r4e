@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="r4e-dev-eclipse4.3" sequenceNumber="23">
+<?pde version="3.8"?><target name="r4e-dev-eclipse4.3" sequenceNumber="24">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.jetty.client" version="7.6.0.v20120127"/>
@@ -18,6 +18,16 @@
 <unit id="org.tigris.subversion.clientadapter.feature.feature.group" version="0.0.0"/>
 <unit id="org.tigris.subversion.clientadapter.javahl.feature.feature.group" version="0.0.0"/>
 <repository location="http://subclipse.tigris.org/update_1.8.x"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.mylyn.gerrit.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.git.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.subclipse.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.commons.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.reviews.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.versions.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.mylyn.test_feature.feature.group" version="0.0.0"/>
+<repository location="http://download.eclipse.org/mylyn/snapshots/weekly"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="javax.activation" version="1.1.0.v201211130549"/>
@@ -39,27 +49,24 @@
 <unit id="org.antlr.runtime" version="3.0.0.v200803061811"/>
 <unit id="org.apache.httpcomponents.httpclient" version="4.2.6.v201311072007"/>
 <unit id="org.apache.httpcomponents.httpcore" version="4.2.5.v201311072007"/>
-<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/I20131123181249/repository/"/>
+<unit id="javassist" version="3.13.0.GA_v201209210905"/>
+<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/S20131206110810/repository/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.mylyn.gerrit.feature.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.git.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.subclipse.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.commons.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.reviews.feature.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.versions.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.mylyn.test_feature.feature.group" version="0.0.0"/>
-<repository location="http://download.eclipse.org/mylyn/snapshots/weekly"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.birt.feature.group" version="4.3.0.v201306051647-DTDN7DGjtEqcbHuY3YHRG7D26DT4"/>
-<unit id="org.eclipse.emf.sdk.feature.group" version="2.9.0.v20130610-0406"/>
-<unit id="org.eclipse.sdk.ide" version="4.3.0.I20130605-2000"/>
-<unit id="org.eclipse.jgit.feature.group" version="3.0.0.201306101825-r"/>
-<unit id="org.eclipse.ecf.core.feature.group" version="3.6.1.v20130605-1748"/>
-<unit id="org.eclipse.egit.feature.group" version="3.0.0.201306101825-r"/>
-<unit id="org.eclipse.cdt.sdk.feature.group" version="8.2.0.201306112328"/>
+<unit id="org.eclipse.sdk.ide" version="4.3.1.M20130911-1000"/>
+<unit id="org.eclipse.cdt.sdk.feature.group" version="8.3.0.201402142303"/>
+<unit id="org.eclipse.ecf.core.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.emf.sdk.feature.group" version="2.9.2.v20140203-1126"/>
+<unit id="org.eclipse.birt.feature.group" version="0.0.0"/>
 <repository location="http://download.eclipse.org/releases/kepler"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.egit.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.jgit.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.jgit.source.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.egit.source.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.egit.mylyn.feature.group" version="0.0.0"/>
+<repository location="http://download.eclipse.org/egit/updates-nightly"/>
 </location>
 </locations>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>

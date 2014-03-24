@@ -49,7 +49,7 @@
 <unit id="org.antlr.runtime" version="3.0.0.v200803061811"/>
 <unit id="org.apache.httpcomponents.httpclient" version="4.2.6.v201311072007"/>
 <unit id="org.apache.httpcomponents.httpcore" version="4.2.5.v201311072007"/>
-<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/I20131123181249/repository/"/>
+<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/S20131206110810/repository/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.sdk.ide" version="4.2.1.M20120914-1800"/>
