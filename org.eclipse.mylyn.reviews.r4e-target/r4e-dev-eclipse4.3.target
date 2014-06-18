@@ -50,7 +50,7 @@
 <unit id="org.apache.httpcomponents.httpclient" version="4.2.6.v201311072007"/>
 <unit id="org.apache.httpcomponents.httpcore" version="4.2.5.v201311072007"/>
 <unit id="javassist" version="3.13.0.GA_v201209210905"/>
-<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/S20131206110810/repository/"/>
+<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20140525021250/repository/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.sdk.ide" version="4.3.1.M20130911-1000"/>
