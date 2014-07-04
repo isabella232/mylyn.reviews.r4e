@@ -4,6 +4,7 @@ Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.mylyn.reviews.connector;singleton:=true
 Bundle-Version: 0.21.0.qualifier
 Bundle-Activator: org.eclipse.mylyn.internal.reviews.connector.EmfCorePlugin
+Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.common,
  org.eclipse.emf.ecore,
